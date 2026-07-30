@@ -1,4 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.yourdomain.com/api'
+  // Update this if Render assigns a different service URL than expected.
+  apiUrl: 'https://blogapi-backend.onrender.com/api'
 };

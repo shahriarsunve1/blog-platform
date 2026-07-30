@@ -82,13 +82,18 @@ public class Startup
     {
         app.UseMiddleware<ErrorHandlingMiddleware>();
 
-        if (env.IsDevelopment())
+        // Swagger stays available in all environments for now (hobby project, no
+        // sensitive schema to hide) so the deployed API is easy to explore/test.
+        app.UseSwagger();
+        app.UseSwaggerUI();
+
+        // Skip HTTPS redirection behind a platform proxy (e.g. Render) that already
+        // terminates TLS and forwards plain HTTP internally.
+        if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PORT")))
         {
-            app.UseSwagger();
-            app.UseSwaggerUI();
+            app.UseHttpsRedirection();
         }
 
-        app.UseHttpsRedirection();
         app.UseRouting();
         app.UseCors("AllowFrontend");
 

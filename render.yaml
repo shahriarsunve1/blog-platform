@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: blogapi-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__DefaultConnection
+        sync: false
+      - key: Jwt__SecretKey
+        sync: false
+      - key: Jwt__Issuer
+        value: BlogAPI
+      - key: Jwt__Audience
+        value: BlogClient
+      - key: Jwt__ExpirationMinutes
+        value: "60"
+      - key: Cors__AllowedOrigins__0
+        sync: false
