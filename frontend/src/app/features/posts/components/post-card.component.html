@@ -8,6 +8,11 @@
 
   <p class="post-excerpt">{{ post.excerpt }}</p>
 
+  <div class="post-tags" *ngIf="post.categories.length || post.tags.length">
+    <span class="tag-chip tag-chip-category" *ngFor="let category of post.categories">{{ category }}</span>
+    <span class="tag-chip" *ngFor="let tag of post.tags">{{ tag }}</span>
+  </div>
+
   <div class="post-card-footer">
     <div class="post-meta">
       <span class="author" *ngIf="post.author">

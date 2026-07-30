@@ -28,11 +28,15 @@ public class Startup
         services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IPostRepository, PostRepository>();
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<ITagRepository, TagRepository>();
 
         // Services
         services.AddScoped<IAuthService, AuthServiceImpl>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IPostService, PostService>();
+        services.AddScoped<ICategoryService, CategoryService>();
+        services.AddScoped<ITagService, TagService>();
 
         // Authentication
         var jwtSettings = _configuration.GetSection("Jwt");

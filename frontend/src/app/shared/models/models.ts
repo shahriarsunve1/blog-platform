@@ -62,6 +62,18 @@ export interface CreatePostDto {
 
 export interface UpdatePostDto extends CreatePostDto {}
 
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export enum PostStatus {
   Draft = 'Draft',
   Published = 'Published',

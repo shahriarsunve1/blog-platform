@@ -64,5 +64,22 @@ public class BlogContext : DbContext
         modelBuilder.Entity<Tag>()
             .HasIndex(t => t.Slug)
             .IsUnique();
+
+        // Starter categories/tags so posts have something to attach to out of the box
+        modelBuilder.Entity<Category>().HasData(
+            new Category { Id = new Guid("11111111-1111-1111-1111-111111111101"), Name = "Technology", Slug = "technology" },
+            new Category { Id = new Guid("11111111-1111-1111-1111-111111111102"), Name = "Lifestyle", Slug = "lifestyle" },
+            new Category { Id = new Guid("11111111-1111-1111-1111-111111111103"), Name = "Business", Slug = "business" },
+            new Category { Id = new Guid("11111111-1111-1111-1111-111111111104"), Name = "Travel", Slug = "travel" },
+            new Category { Id = new Guid("11111111-1111-1111-1111-111111111105"), Name = "Health", Slug = "health" }
+        );
+
+        modelBuilder.Entity<Tag>().HasData(
+            new Tag { Id = new Guid("22222222-2222-2222-2222-222222222201"), Name = "Tutorial", Slug = "tutorial" },
+            new Tag { Id = new Guid("22222222-2222-2222-2222-222222222202"), Name = "News", Slug = "news" },
+            new Tag { Id = new Guid("22222222-2222-2222-2222-222222222203"), Name = "Opinion", Slug = "opinion" },
+            new Tag { Id = new Guid("22222222-2222-2222-2222-222222222204"), Name = "Guide", Slug = "guide" },
+            new Tag { Id = new Guid("22222222-2222-2222-2222-222222222205"), Name = "Announcement", Slug = "announcement" }
+        );
     }
 }

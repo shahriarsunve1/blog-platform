@@ -35,3 +35,19 @@ public interface IPostRepository : IGenericRepository<Post>
     Task<Post?> GetPostWithDetailsAsync(Guid id);
     Task<int> GetPublishedPostsCountAsync();
 }
+
+/// <summary>
+/// Category repository interface
+/// </summary>
+public interface ICategoryRepository : IGenericRepository<Category>
+{
+    Task<List<Category>> GetByIdsAsync(IEnumerable<Guid> ids);
+}
+
+/// <summary>
+/// Tag repository interface
+/// </summary>
+public interface ITagRepository : IGenericRepository<Tag>
+{
+    Task<List<Tag>> GetByIdsAsync(IEnumerable<Guid> ids);
+}

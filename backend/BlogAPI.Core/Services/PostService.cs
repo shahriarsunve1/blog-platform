@@ -13,11 +13,19 @@ public class PostService : IPostService
 {
     private readonly IPostRepository _postRepository;
     private readonly IUserRepository _userRepository;
+    private readonly ICategoryRepository _categoryRepository;
+    private readonly ITagRepository _tagRepository;
 
-    public PostService(IPostRepository postRepository, IUserRepository userRepository)
+    public PostService(
+        IPostRepository postRepository,
+        IUserRepository userRepository,
+        ICategoryRepository categoryRepository,
+        ITagRepository tagRepository)
     {
         _postRepository = postRepository;
         _userRepository = userRepository;
+        _categoryRepository = categoryRepository;
+        _tagRepository = tagRepository;
     }
 
     public async Task<PaginatedResponse<PostDto>> GetPublishedPostsAsync(int pageNumber = 1, int pageSize = 10)
@@ -50,17 +58,24 @@ public class PostService : IPostService
         if (user == null)
             throw new EntityNotFoundException("User not found");
 
+        var status = Enum.Parse<PostStatus>(request.Status);
         var post = new Post
         {
             UserId = userId,
             Title = request.Title,
             Excerpt = request.Excerpt,
             Content = request.Content,
-            Status = PostStatus.Draft,
+            Status = status,
             ViewCount = 0,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
+            PublishedAt = status == PostStatus.Published ? DateTime.UtcNow : null
         };
+
+        foreach (var category in await _categoryRepository.GetByIdsAsync(request.CategoryIds))
+            post.Categories.Add(category);
+        foreach (var tag in await _tagRepository.GetByIdsAsync(request.TagIds))
+            post.Tags.Add(tag);
 
         var createdPost = await _postRepository.AddAsync(post);
         return MapToPostDto(createdPost);
@@ -83,6 +98,14 @@ public class PostService : IPostService
 
         if (request.Status == "Published" && post.PublishedAt == null)
             post.PublishedAt = DateTime.UtcNow;
+
+        post.Categories.Clear();
+        foreach (var category in await _categoryRepository.GetByIdsAsync(request.CategoryIds))
+            post.Categories.Add(category);
+
+        post.Tags.Clear();
+        foreach (var tag in await _tagRepository.GetByIdsAsync(request.TagIds))
+            post.Tags.Add(tag);
 
         await _postRepository.UpdateAsync(post);
         return MapToPostDto(post);
@@ -130,7 +153,9 @@ public class PostService : IPostService
                 Email = post.Author.Email,
                 FirstName = post.Author.FirstName,
                 LastName = post.Author.LastName
-            } : null
+            } : null,
+            Categories = post.Categories.Select(c => c.Name).ToList(),
+            Tags = post.Tags.Select(t => t.Name).ToList()
         };
     }
 }

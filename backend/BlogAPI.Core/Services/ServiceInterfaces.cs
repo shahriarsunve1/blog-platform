@@ -36,3 +36,19 @@ public interface IUserService
     Task<UserDto> GetUserByEmailAsync(string email);
     Task<bool> UserExistsAsync(string email);
 }
+
+/// <summary>
+/// Interface for category service
+/// </summary>
+public interface ICategoryService
+{
+    Task<List<CategoryDto>> GetAllAsync();
+}
+
+/// <summary>
+/// Interface for tag service
+/// </summary>
+public interface ITagService
+{
+    Task<List<TagDto>> GetAllAsync();
+}

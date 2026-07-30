@@ -65,6 +65,36 @@
       </select>
     </div>
 
+    <div class="form-group">
+      <label>Categories</label>
+      <div class="chip-picker">
+        <button
+          type="button"
+          *ngFor="let category of categories"
+          class="chip"
+          [class.selected]="isCategorySelected(category.id)"
+          (click)="toggleCategory(category.id)"
+        >
+          {{ category.name }}
+        </button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Tags</label>
+      <div class="chip-picker">
+        <button
+          type="button"
+          *ngFor="let tag of tags"
+          class="chip"
+          [class.selected]="isTagSelected(tag.id)"
+          (click)="toggleTag(tag.id)"
+        >
+          {{ tag.name }}
+        </button>
+      </div>
+    </div>
+
     <div class="alert alert-danger" *ngIf="errorMessage">
       {{ errorMessage }}
     </div>

@@ -93,6 +93,8 @@ public class PostRepository : GenericRepository<Post>, IPostRepository
         return await _context.Posts
             .Where(p => p.Status == PostStatus.Published)
             .Include(p => p.Author)
+            .Include(p => p.Categories)
+            .Include(p => p.Tags)
             .OrderByDescending(p => p.PublishedAt)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
@@ -104,6 +106,8 @@ public class PostRepository : GenericRepository<Post>, IPostRepository
         return await _context.Posts
             .Where(p => p.UserId == userId)
             .Include(p => p.Author)
+            .Include(p => p.Categories)
+            .Include(p => p.Tags)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
     }
@@ -120,5 +124,35 @@ public class PostRepository : GenericRepository<Post>, IPostRepository
     public async Task<int> GetPublishedPostsCountAsync()
     {
         return await _context.Posts.CountAsync(p => p.Status == PostStatus.Published);
+    }
+}
+
+/// <summary>
+/// Category repository implementation
+/// </summary>
+public class CategoryRepository : GenericRepository<Category>, ICategoryRepository
+{
+    public CategoryRepository(BlogContext context) : base(context)
+    {
+    }
+
+    public async Task<List<Category>> GetByIdsAsync(IEnumerable<Guid> ids)
+    {
+        return await _context.Categories.Where(c => ids.Contains(c.Id)).ToListAsync();
+    }
+}
+
+/// <summary>
+/// Tag repository implementation
+/// </summary>
+public class TagRepository : GenericRepository<Tag>, ITagRepository
+{
+    public TagRepository(BlogContext context) : base(context)
+    {
+    }
+
+    public async Task<List<Tag>> GetByIdsAsync(IEnumerable<Guid> ids)
+    {
+        return await _context.Tags.Where(t => ids.Contains(t.Id)).ToListAsync();
     }
 }

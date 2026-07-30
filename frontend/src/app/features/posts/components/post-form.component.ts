@@ -2,9 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { forkJoin } from 'rxjs';
 import { PostService } from '../services/post.service';
+import { TaxonomyService } from '../services/taxonomy.service';
 import { AuthService } from '../../../core/auth/auth.service';
-import { CreatePostDto, UpdatePostDto } from '../../../shared/models/models';
+import { Category, CreatePostDto, Tag, UpdatePostDto } from '../../../shared/models/models';
 
 @Component({
   selector: 'app-post-form',
@@ -23,9 +25,15 @@ export class PostFormComponent implements OnInit {
 
   statuses = ['Draft', 'Published', 'Archived'];
 
+  categories: Category[] = [];
+  tags: Tag[] = [];
+  selectedCategoryIds: string[] = [];
+  selectedTagIds: string[] = [];
+
   constructor(
     private fb: FormBuilder,
     private postService: PostService,
+    private taxonomyService: TaxonomyService,
     private authService: AuthService,
     private route: ActivatedRoute,
     private router: Router
@@ -34,12 +42,23 @@ export class PostFormComponent implements OnInit {
   ngOnInit(): void {
     this.initializeForm();
 
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.isEditing = true;
-      this.postId = id;
-      this.loadPost(this.postId);
-    }
+    forkJoin({
+      categories: this.taxonomyService.getCategories(),
+      tags: this.taxonomyService.getTags()
+    }).subscribe({
+      next: ({ categories, tags }) => {
+        this.categories = categories.data ?? [];
+        this.tags = tags.data ?? [];
+
+        const id = this.route.snapshot.paramMap.get('id');
+        if (id) {
+          this.isEditing = true;
+          this.postId = id;
+          this.loadPost(this.postId);
+        }
+      },
+      error: (err) => console.error('Error loading categories/tags:', err)
+    });
   }
 
   private initializeForm(): void {
@@ -47,9 +66,7 @@ export class PostFormComponent implements OnInit {
       title: ['', [Validators.required, Validators.minLength(3)]],
       excerpt: ['', [Validators.required, Validators.minLength(10)]],
       content: ['', [Validators.required, Validators.minLength(50)]],
-      status: ['Draft', Validators.required],
-      categoryIds: [[]],
-      tagIds: [[]]
+      status: ['Draft', Validators.required]
     });
   }
 
@@ -64,6 +81,16 @@ export class PostFormComponent implements OnInit {
             content: response.data.content,
             status: response.data.status
           });
+
+          const categoryNames = new Set(response.data.categories);
+          this.selectedCategoryIds = this.categories
+            .filter(c => categoryNames.has(c.name))
+            .map(c => c.id);
+
+          const tagNames = new Set(response.data.tags);
+          this.selectedTagIds = this.tags
+            .filter(t => tagNames.has(t.name))
+            .map(t => t.id);
         }
         this.isLoading = false;
       },
@@ -80,6 +107,26 @@ export class PostFormComponent implements OnInit {
     return !!(field && field.invalid && (field.dirty || field.touched));
   }
 
+  isCategorySelected(id: string): boolean {
+    return this.selectedCategoryIds.includes(id);
+  }
+
+  toggleCategory(id: string): void {
+    this.selectedCategoryIds = this.isCategorySelected(id)
+      ? this.selectedCategoryIds.filter(c => c !== id)
+      : [...this.selectedCategoryIds, id];
+  }
+
+  isTagSelected(id: string): boolean {
+    return this.selectedTagIds.includes(id);
+  }
+
+  toggleTag(id: string): void {
+    this.selectedTagIds = this.isTagSelected(id)
+      ? this.selectedTagIds.filter(t => t !== id)
+      : [...this.selectedTagIds, id];
+  }
+
   onSubmit(): void {
     if (this.form.invalid) return;
 
@@ -94,8 +141,14 @@ export class PostFormComponent implements OnInit {
       return;
     }
 
+    const payload = {
+      ...this.form.value,
+      categoryIds: this.selectedCategoryIds,
+      tagIds: this.selectedTagIds
+    };
+
     if (this.isEditing && this.postId) {
-      const updateRequest: UpdatePostDto = this.form.value;
+      const updateRequest: UpdatePostDto = payload;
       this.postService.updatePost(this.postId, updateRequest).subscribe({
         next: () => {
           this.successMessage = 'Post updated successfully!';
@@ -109,7 +162,7 @@ export class PostFormComponent implements OnInit {
         }
       });
     } else {
-      const createRequest: CreatePostDto = this.form.value;
+      const createRequest: CreatePostDto = payload;
       this.postService.createPost(createRequest).subscribe({
         next: (response) => {
           this.successMessage = 'Post created successfully!';
