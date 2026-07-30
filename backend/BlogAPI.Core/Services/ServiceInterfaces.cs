@@ -22,7 +22,7 @@ public interface IPostService
 {
     Task<PostDto> CreatePostAsync(Guid userId, CreatePostDto dto);
     Task<PostDto> GetPostByIdAsync(Guid postId);
-    Task<PaginatedResponse<PostDto>> GetPublishedPostsAsync(int pageNumber = 1, int pageSize = 10, Guid? categoryId = null, Guid? tagId = null);
+    Task<PaginatedResponse<PostDto>> GetPublishedPostsAsync(int pageNumber = 1, int pageSize = 10, Guid? categoryId = null, Guid? tagId = null, string? search = null);
     Task<List<PostDto>> GetUserPostsAsync(Guid userId);
     Task<PostDto> UpdatePostAsync(Guid postId, UpdatePostDto dto, Guid userId);
     Task DeletePostAsync(Guid postId, Guid userId);

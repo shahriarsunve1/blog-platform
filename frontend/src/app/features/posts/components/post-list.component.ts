@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { PostService } from '../services/post.service';
 import { TaxonomyService } from '../services/taxonomy.service';
 import { Category, Post, Tag } from '../../../shared/models/models';
@@ -14,7 +16,7 @@ import { PostCardComponent } from './post-card.component';
   standalone: true,
   imports: [CommonModule, FormsModule, PostCardComponent]
 })
-export class PostListComponent implements OnInit {
+export class PostListComponent implements OnInit, OnDestroy {
   posts: Post[] = [];
   isLoading = false;
   currentPage = 1;
@@ -27,6 +29,9 @@ export class PostListComponent implements OnInit {
   tags: Tag[] = [];
   selectedCategoryId = '';
   selectedTagId = '';
+
+  private searchInput$ = new Subject<string>();
+  private searchSubscription?: Subscription;
 
   constructor(
     private postService: PostService,
@@ -41,13 +46,32 @@ export class PostListComponent implements OnInit {
     this.taxonomyService.getTags().subscribe({
       next: (response) => (this.tags = response.data ?? [])
     });
+
+    this.searchSubscription = this.searchInput$
+      .pipe(debounceTime(350), distinctUntilChanged())
+      .subscribe(() => this.onFilterChange());
+
     this.loadPosts();
+  }
+
+  ngOnDestroy(): void {
+    this.searchSubscription?.unsubscribe();
+  }
+
+  onSearchInput(): void {
+    this.searchInput$.next(this.searchQuery);
   }
 
   loadPosts(): void {
     this.isLoading = true;
     this.postService
-      .getPublishedPosts(this.currentPage, this.pageSize, this.selectedCategoryId || undefined, this.selectedTagId || undefined)
+      .getPublishedPosts(
+        this.currentPage,
+        this.pageSize,
+        this.selectedCategoryId || undefined,
+        this.selectedTagId || undefined,
+        this.searchQuery.trim() || undefined
+      )
       .subscribe({
         next: (response) => {
           if (response.data) {
@@ -72,6 +96,7 @@ export class PostListComponent implements OnInit {
   clearFilters(): void {
     this.selectedCategoryId = '';
     this.selectedTagId = '';
+    this.searchQuery = '';
     this.onFilterChange();
   }
 
@@ -109,6 +134,6 @@ export class PostListComponent implements OnInit {
   }
 
   get hasActiveFilters(): boolean {
-    return !!this.selectedCategoryId || !!this.selectedTagId;
+    return !!this.selectedCategoryId || !!this.selectedTagId || !!this.searchQuery.trim();
   }
 }

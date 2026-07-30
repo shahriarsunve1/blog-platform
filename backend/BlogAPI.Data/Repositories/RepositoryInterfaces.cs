@@ -30,10 +30,10 @@ public interface IUserRepository : IGenericRepository<User>
 /// </summary>
 public interface IPostRepository : IGenericRepository<Post>
 {
-    Task<List<Post>> GetPublishedPostsAsync(int pageNumber, int pageSize, Guid? categoryId = null, Guid? tagId = null);
+    Task<List<Post>> GetPublishedPostsAsync(int pageNumber, int pageSize, Guid? categoryId = null, Guid? tagId = null, string? search = null);
     Task<List<Post>> GetUserPostsAsync(Guid userId);
     Task<Post?> GetPostWithDetailsAsync(Guid id);
-    Task<int> GetPublishedPostsCountAsync(Guid? categoryId = null, Guid? tagId = null);
+    Task<int> GetPublishedPostsCountAsync(Guid? categoryId = null, Guid? tagId = null, string? search = null);
 }
 
 /// <summary>

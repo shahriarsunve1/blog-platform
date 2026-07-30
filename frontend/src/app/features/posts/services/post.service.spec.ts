@@ -36,6 +36,14 @@ describe('PostService', () => {
     req.flush({ success: true, statusCode: 200, message: '', data: { items: [], totalCount: 0, pageNumber: 1, pageSize: 10, totalPages: 0 }, errors: [] });
   });
 
+  it('getPublishedPosts() appends and URL-encodes the search term', () => {
+    service.getPublishedPosts(1, 10, undefined, undefined, 'angular & rxjs').subscribe();
+
+    const req = httpMock.expectOne(`${apiUrl}?pageNumber=1&pageSize=10&search=${encodeURIComponent('angular & rxjs')}`);
+    expect(req.request.method).toBe('GET');
+    req.flush({ success: true, statusCode: 200, message: '', data: { items: [], totalCount: 0, pageNumber: 1, pageSize: 10, totalPages: 0 }, errors: [] });
+  });
+
   it('getPostById() requests the specific post', () => {
     service.getPostById('abc-123').subscribe();
 

@@ -69,6 +69,25 @@
     margin-bottom: 32px;
     flex-wrap: wrap;
 
+    .search-input {
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+      background: var(--color-surface);
+      color: var(--color-text);
+      font-size: 13.5px;
+      font-family: var(--font-sans);
+      min-width: 220px;
+      flex: 1;
+      max-width: 320px;
+
+      &:focus {
+        outline: none;
+        border-color: var(--color-accent);
+        box-shadow: 0 0 0 3px var(--color-accent-soft);
+      }
+    }
+
     .filter-select {
       padding: 8px 12px;
       border-radius: var(--radius-sm);

@@ -88,12 +88,18 @@ public class PostRepository : GenericRepository<Post>, IPostRepository
     {
     }
 
-    public async Task<List<Post>> GetPublishedPostsAsync(int pageNumber, int pageSize, Guid? categoryId = null, Guid? tagId = null)
+    public async Task<List<Post>> GetPublishedPostsAsync(int pageNumber, int pageSize, Guid? categoryId = null, Guid? tagId = null, string? search = null)
     {
+        var normalizedSearch = string.IsNullOrWhiteSpace(search) ? null : search.Trim().ToLower();
+
         return await _context.Posts
             .Where(p => p.Status == PostStatus.Published)
             .Where(p => categoryId == null || p.Categories.Any(c => c.Id == categoryId))
             .Where(p => tagId == null || p.Tags.Any(t => t.Id == tagId))
+            .Where(p => normalizedSearch == null
+                || p.Title.ToLower().Contains(normalizedSearch)
+                || p.Excerpt.ToLower().Contains(normalizedSearch)
+                || p.Content.ToLower().Contains(normalizedSearch))
             .Include(p => p.Author)
             .Include(p => p.Categories)
             .Include(p => p.Tags)
@@ -123,12 +129,18 @@ public class PostRepository : GenericRepository<Post>, IPostRepository
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
-    public async Task<int> GetPublishedPostsCountAsync(Guid? categoryId = null, Guid? tagId = null)
+    public async Task<int> GetPublishedPostsCountAsync(Guid? categoryId = null, Guid? tagId = null, string? search = null)
     {
+        var normalizedSearch = string.IsNullOrWhiteSpace(search) ? null : search.Trim().ToLower();
+
         return await _context.Posts
             .Where(p => p.Status == PostStatus.Published)
             .Where(p => categoryId == null || p.Categories.Any(c => c.Id == categoryId))
             .Where(p => tagId == null || p.Tags.Any(t => t.Id == tagId))
+            .Where(p => normalizedSearch == null
+                || p.Title.ToLower().Contains(normalizedSearch)
+                || p.Excerpt.ToLower().Contains(normalizedSearch)
+                || p.Content.ToLower().Contains(normalizedSearch))
             .CountAsync();
     }
 }

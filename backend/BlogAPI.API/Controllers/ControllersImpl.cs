@@ -123,9 +123,10 @@ public class PostsController : ControllerBase
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10,
         [FromQuery] Guid? categoryId = null,
-        [FromQuery] Guid? tagId = null)
+        [FromQuery] Guid? tagId = null,
+        [FromQuery] string? search = null)
     {
-        var result = await _postService.GetPublishedPostsAsync(pageNumber, pageSize, categoryId, tagId);
+        var result = await _postService.GetPublishedPostsAsync(pageNumber, pageSize, categoryId, tagId, search);
         return Ok(ApiResponse<PaginatedResponse<PostDto>>.Ok(result));
     }
 

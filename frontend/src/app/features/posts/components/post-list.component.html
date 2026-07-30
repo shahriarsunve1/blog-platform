@@ -7,6 +7,14 @@
   </div>
 
   <div class="posts-filters">
+    <input
+      type="search"
+      class="search-input"
+      placeholder="Search posts..."
+      [(ngModel)]="searchQuery"
+      (ngModelChange)="onSearchInput()"
+    />
+
     <select class="filter-select" [(ngModel)]="selectedCategoryId" (ngModelChange)="onFilterChange()">
       <option value="">All categories</option>
       <option *ngFor="let category of categories" [value]="category.id">{{ category.name }}</option>

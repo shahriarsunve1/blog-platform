@@ -22,11 +22,13 @@ export class PostService {
     pageNumber: number = 1,
     pageSize: number = 10,
     categoryId?: string,
-    tagId?: string
+    tagId?: string,
+    search?: string
   ): Observable<ApiResponse<PaginatedResponse<Post>>> {
     let url = `${this.apiUrl}?pageNumber=${pageNumber}&pageSize=${pageSize}`;
     if (categoryId) url += `&categoryId=${categoryId}`;
     if (tagId) url += `&tagId=${tagId}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
     return this.http.get<ApiResponse<PaginatedResponse<Post>>>(url);
   }
 
