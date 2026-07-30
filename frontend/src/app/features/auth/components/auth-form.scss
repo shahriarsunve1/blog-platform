@@ -2,25 +2,25 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
+  min-height: calc(100vh - 73px);
+  background: var(--color-bg);
+  padding: 24px;
 }
 
 .auth-card {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  padding: 40px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 44px 40px;
   max-width: 400px;
   width: 100%;
 
   h2 {
     text-align: center;
-    margin-bottom: 30px;
-    color: #333;
+    margin-bottom: 32px;
+    color: var(--color-text);
     font-size: 28px;
-    font-weight: 600;
   }
 
   .form-group {
@@ -29,57 +29,60 @@
     label {
       display: block;
       margin-bottom: 8px;
-      color: #555;
+      color: var(--color-text-muted);
       font-weight: 500;
-      font-size: 14px;
+      font-size: 13.5px;
     }
 
     .form-control {
       width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px;
-      transition: border-color 0.3s, box-shadow 0.3s;
+      padding: 11px 14px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      font-size: 14.5px;
+      font-family: var(--font-sans);
+      background: var(--color-bg);
+      color: var(--color-text);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
       &:focus {
         outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        border-color: var(--color-accent);
+        background: var(--color-surface);
+        box-shadow: 0 0 0 3px var(--color-accent-soft);
       }
 
       &.is-invalid {
-        border-color: #dc3545;
-        background-color: #fff5f5;
+        border-color: var(--color-danger);
+        background-color: var(--color-danger-soft);
       }
     }
 
     .invalid-feedback {
       display: block;
-      margin-top: 5px;
-      color: #dc3545;
-      font-size: 12px;
+      margin-top: 6px;
+      color: var(--color-danger);
+      font-size: 12.5px;
     }
   }
 
   .btn {
     width: 100%;
-    padding: 10px;
-    margin-top: 10px;
+    padding: 12px;
+    margin-top: 6px;
     border: none;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     font-weight: 600;
+    font-size: 14.5px;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: background-color 0.15s ease, transform 0.15s ease;
 
     &.btn-primary {
-      background-color: #667eea;
+      background-color: var(--color-accent);
       color: white;
 
       &:hover:not(:disabled) {
-        background-color: #5568d3;
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        background-color: var(--color-accent-hover);
       }
 
       &:disabled {
@@ -90,31 +93,31 @@
   }
 
   .alert {
-    padding: 12px;
-    border-radius: 4px;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
     margin-bottom: 20px;
-    font-size: 14px;
+    font-size: 13.5px;
 
     &.alert-danger {
-      background-color: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
+      background-color: var(--color-danger-soft);
+      color: var(--color-danger);
     }
   }
 
   .auth-toggle {
     p {
-      margin: 0;
-      color: #666;
-      font-size: 14px;
+      margin: 24px 0 0;
+      text-align: center;
+      color: var(--color-text-muted);
+      font-size: 13.5px;
 
       a {
-        color: #667eea;
+        color: var(--color-accent);
         text-decoration: none;
         font-weight: 600;
 
         &:hover {
-          text-decoration: underline;
+          color: var(--color-accent-hover);
         }
       }
     }
@@ -123,15 +126,15 @@
 
 @media (max-width: 480px) {
   .auth-container {
-    padding: 10px;
+    padding: 12px;
   }
 
   .auth-card {
-    padding: 25px;
+    padding: 28px 24px;
 
     h2 {
       font-size: 24px;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
     }
   }
 }

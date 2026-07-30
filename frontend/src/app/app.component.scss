@@ -1,59 +1,89 @@
 .app-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .app-nav {
-  max-width: 1200px;
+  max-width: 1080px;
   margin: 0 auto;
-  padding: 16px 20px;
+  padding: 20px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 16px;
 
   .brand {
-    font-size: 20px;
+    font-family: var(--font-serif);
+    font-size: 22px;
     font-weight: 700;
+    letter-spacing: -0.01em;
     text-decoration: none;
-    color: white;
+    color: var(--color-text);
+
+    &:hover {
+      color: var(--color-accent);
+    }
   }
 
   .nav-links {
     display: flex;
     align-items: center;
-    gap: 20px;
-    font-size: 14px;
+    gap: 28px;
+    font-size: 14.5px;
 
     a {
       text-decoration: none;
-      color: rgba(255, 255, 255, 0.85);
+      color: var(--color-text-muted);
       font-weight: 500;
+      transition: color 0.15s ease;
+      padding-bottom: 2px;
+      border-bottom: 1px solid transparent;
 
-      &:hover,
+      &:hover {
+        color: var(--color-text);
+      }
+
       &.active {
-        color: white;
+        color: var(--color-text);
+        border-bottom-color: var(--color-accent);
+      }
+    }
+
+    .nav-cta {
+      background: var(--color-accent);
+      color: #fff !important;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      border-bottom: none !important;
+      transition: background-color 0.15s ease;
+
+      &:hover {
+        background: var(--color-accent-hover);
+      }
+
+      &.active {
+        background: var(--color-accent-hover);
       }
     }
 
     .nav-user {
-      color: white;
+      color: var(--color-text);
       font-weight: 600;
     }
 
     .btn-link {
       background: none;
       border: none;
-      color: rgba(255, 255, 255, 0.85);
+      color: var(--color-text-muted);
       font-weight: 500;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 14.5px;
       padding: 0;
+      font-family: inherit;
 
       &:hover {
-        color: white;
+        color: var(--color-danger);
       }
     }
   }
