@@ -36,6 +36,53 @@
       </span>
     </div>
   </article>
+
+  <section class="comments-section">
+    <h3>Comments ({{ comments.length }})</h3>
+
+    <div class="comment-form" *ngIf="currentUserId; else loginToComment">
+      <textarea
+        class="form-control"
+        rows="3"
+        placeholder="Add a comment..."
+        [(ngModel)]="newCommentText"
+        [disabled]="isPostingComment"
+      ></textarea>
+      <div class="alert alert-danger" *ngIf="commentError">{{ commentError }}</div>
+      <button
+        class="btn btn-primary"
+        (click)="postComment()"
+        [disabled]="!newCommentText.trim() || isPostingComment"
+      >
+        {{ isPostingComment ? 'Posting...' : 'Post Comment' }}
+      </button>
+    </div>
+    <ng-template #loginToComment>
+      <p class="login-prompt">
+        <a routerLink="/auth/login">Log in</a> to leave a comment.
+      </p>
+    </ng-template>
+
+    <div class="loading-spinner" *ngIf="commentsLoading">
+      <div class="spinner"></div>
+    </div>
+
+    <ul class="comment-list" *ngIf="!commentsLoading">
+      <li class="comment" *ngFor="let comment of comments">
+        <div class="comment-meta">
+          <span class="comment-author">{{ comment.author?.firstName }} {{ comment.author?.lastName }}</span>
+          <span class="comment-date">{{ comment.createdAt | date: 'medium' }}</span>
+          <button class="comment-delete" *ngIf="canDeleteComment(comment)" (click)="deleteComment(comment)">
+            Delete
+          </button>
+        </div>
+        <p class="comment-content">{{ comment.content }}</p>
+      </li>
+      <li class="no-comments" *ngIf="comments.length === 0">
+        No comments yet. Be the first to say something!
+      </li>
+    </ul>
+  </section>
 </div>
 
 <div class="loading-spinner" *ngIf="isLoading">

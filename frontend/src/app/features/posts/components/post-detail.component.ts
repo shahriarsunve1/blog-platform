@@ -1,25 +1,35 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { PostService } from '../services/post.service';
+import { CommentService } from '../services/comment.service';
 import { AuthService } from '../../../core/auth/auth.service';
-import { Post } from '../../../shared/models/models';
+import { Comment, Post } from '../../../shared/models/models';
 
 @Component({
   selector: 'app-post-detail',
   templateUrl: './post-detail.component.html',
   styleUrls: ['./posts.scss'],
   standalone: true,
-  imports: [CommonModule]
+  imports: [CommonModule, FormsModule, RouterModule]
 })
 export class PostDetailComponent implements OnInit {
   post: Post | null = null;
   isLoading = true;
   isAuthor = false;
   currentUserId: string | null = null;
+  isAdmin = false;
+
+  comments: Comment[] = [];
+  commentsLoading = false;
+  newCommentText = '';
+  isPostingComment = false;
+  commentError = '';
 
   constructor(
     private postService: PostService,
+    private commentService: CommentService,
     private authService: AuthService,
     private route: ActivatedRoute,
     private router: Router
@@ -29,10 +39,12 @@ export class PostDetailComponent implements OnInit {
     const user = this.authService.getCurrentUser();
     if (user) {
       this.currentUserId = user.id;
+      this.isAdmin = user.role === 'Admin';
     }
 
     const postId = this.route.snapshot.paramMap.get('id')!;
     this.loadPost(postId);
+    this.loadComments(postId);
   }
 
   loadPost(postId: string): void {
@@ -48,6 +60,59 @@ export class PostDetailComponent implements OnInit {
         console.error('Error loading post:', err);
         this.isLoading = false;
         this.router.navigate(['/posts']);
+      }
+    });
+  }
+
+  loadComments(postId: string): void {
+    this.commentsLoading = true;
+    this.commentService.getByPost(postId).subscribe({
+      next: (response) => {
+        this.comments = response.data ?? [];
+        this.commentsLoading = false;
+      },
+      error: (err) => {
+        console.error('Error loading comments:', err);
+        this.commentsLoading = false;
+      }
+    });
+  }
+
+  canDeleteComment(comment: Comment): boolean {
+    return comment.author?.id === this.currentUserId || this.isAdmin;
+  }
+
+  postComment(): void {
+    if (!this.post || !this.newCommentText.trim()) return;
+
+    this.isPostingComment = true;
+    this.commentError = '';
+
+    this.commentService.create(this.post.id, { content: this.newCommentText.trim() }).subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.comments.push(response.data);
+        }
+        this.newCommentText = '';
+        this.isPostingComment = false;
+      },
+      error: (err) => {
+        this.commentError = err.error?.message || 'Failed to post comment';
+        this.isPostingComment = false;
+      }
+    });
+  }
+
+  deleteComment(comment: Comment): void {
+    if (!confirm('Delete this comment?')) return;
+
+    this.commentService.delete(comment.id).subscribe({
+      next: () => {
+        this.comments = this.comments.filter(c => c.id !== comment.id);
+      },
+      error: (err) => {
+        console.error('Error deleting comment:', err);
+        alert('Failed to delete comment');
       }
     });
   }

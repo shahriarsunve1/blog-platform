@@ -53,3 +53,13 @@ public interface ITagService
 {
     Task<List<TagDto>> GetAllAsync();
 }
+
+/// <summary>
+/// Interface for comment service
+/// </summary>
+public interface ICommentService
+{
+    Task<List<CommentDto>> GetByPostIdAsync(Guid postId);
+    Task<CommentDto> CreateAsync(Guid postId, Guid userId, CreateCommentDto dto);
+    Task DeleteAsync(Guid commentId, Guid userId);
+}

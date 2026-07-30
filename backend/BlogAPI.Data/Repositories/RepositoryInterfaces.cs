@@ -51,3 +51,11 @@ public interface ITagRepository : IGenericRepository<Tag>
 {
     Task<List<Tag>> GetByIdsAsync(IEnumerable<Guid> ids);
 }
+
+/// <summary>
+/// Comment repository interface
+/// </summary>
+public interface ICommentRepository : IGenericRepository<Comment>
+{
+    Task<List<Comment>> GetByPostIdAsync(Guid postId);
+}

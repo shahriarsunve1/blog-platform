@@ -156,3 +156,22 @@ public class TagRepository : GenericRepository<Tag>, ITagRepository
         return await _context.Tags.Where(t => ids.Contains(t.Id)).ToListAsync();
     }
 }
+
+/// <summary>
+/// Comment repository implementation
+/// </summary>
+public class CommentRepository : GenericRepository<Comment>, ICommentRepository
+{
+    public CommentRepository(BlogContext context) : base(context)
+    {
+    }
+
+    public async Task<List<Comment>> GetByPostIdAsync(Guid postId)
+    {
+        return await _context.Comments
+            .Where(c => c.PostId == postId)
+            .Include(c => c.Author)
+            .OrderBy(c => c.CreatedAt)
+            .ToListAsync();
+    }
+}

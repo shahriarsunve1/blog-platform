@@ -16,6 +16,7 @@ public class BlogContext : DbContext
     public DbSet<Post> Posts { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<Tag> Tags { get; set; }
+    public DbSet<Comment> Comments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -64,6 +65,20 @@ public class BlogContext : DbContext
         modelBuilder.Entity<Tag>()
             .HasIndex(t => t.Slug)
             .IsUnique();
+
+        // Comment configuration
+        modelBuilder.Entity<Comment>()
+            .HasKey(c => c.Id);
+        modelBuilder.Entity<Comment>()
+            .HasOne(c => c.Post)
+            .WithMany(p => p.Comments)
+            .HasForeignKey(c => c.PostId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<Comment>()
+            .HasOne(c => c.Author)
+            .WithMany()
+            .HasForeignKey(c => c.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Starter categories/tags so posts have something to attach to out of the box
         modelBuilder.Entity<Category>().HasData(

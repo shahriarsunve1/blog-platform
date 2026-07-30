@@ -26,3 +26,11 @@ public class UpdatePostDtoValidator : AbstractValidator<UpdatePostDto>
             .WithMessage("Status must be one of: Draft, Published, Archived");
     }
 }
+
+public class CreateCommentDtoValidator : AbstractValidator<CreateCommentDto>
+{
+    public CreateCommentDtoValidator()
+    {
+        RuleFor(x => x.Content).NotEmpty().MaximumLength(2000);
+    }
+}

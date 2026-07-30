@@ -86,6 +86,22 @@ export enum PostStatus {
 }
 
 /**
+ * Comment models
+ */
+export interface Comment {
+  id: string;
+  postId: string;
+  content: string;
+  author?: User;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCommentDto {
+  content: string;
+}
+
+/**
  * API response models
  */
 export interface ApiResponse<T> {
