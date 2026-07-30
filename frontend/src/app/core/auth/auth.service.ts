@@ -4,6 +4,8 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { User, LoginRequest, RegisterRequest, AuthResponse, ApiResponse } from '../../shared/models/models';
+import { throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 /**
  * Authentication service
@@ -37,6 +39,29 @@ export class AuthService {
     return this.http.post<ApiResponse<AuthResponse>>(`${this.apiUrl}/login`, request).pipe(
       map(response => response.data!),
       tap(data => this.storeAuthData(data))
+    );
+  }
+
+  /**
+   * Exchange the stored (possibly expired) access token + refresh token for a
+   * new pair. Fails (and logs out) if there's no refresh token or it's invalid.
+   */
+  refreshToken(): Observable<AuthResponse> {
+    const accessToken = localStorage.getItem('accessToken');
+    const refreshToken = localStorage.getItem('refreshToken');
+
+    if (!accessToken || !refreshToken) {
+      this.logout();
+      return throwError(() => new Error('No refresh token available'));
+    }
+
+    return this.http.post<ApiResponse<AuthResponse>>(`${this.apiUrl}/refresh`, { accessToken, refreshToken }).pipe(
+      map(response => response.data!),
+      tap(data => this.storeAuthData(data)),
+      catchError(err => {
+        this.logout();
+        return throwError(() => err);
+      })
     );
   }
 

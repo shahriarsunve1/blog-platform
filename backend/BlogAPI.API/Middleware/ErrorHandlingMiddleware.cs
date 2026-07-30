@@ -1,4 +1,5 @@
 using BlogAPI.Domain.Exceptions;
+using FluentValidation;
 
 namespace BlogAPI.API.Middleware;
 
@@ -37,9 +38,26 @@ public class ErrorHandlingMiddleware
         {
             EntityNotFoundException => StatusCodes.Status404NotFound,
             UnauthorizedException => StatusCodes.Status401Unauthorized,
+            ValidationException => StatusCodes.Status400BadRequest,
             ArgumentException => StatusCodes.Status400BadRequest,
             _ => StatusCodes.Status500InternalServerError
         };
+
+        if (exception is ValidationException validationException)
+        {
+            var validationResponse = new
+            {
+                success = false,
+                message = "Validation failed",
+                statusCode = context.Response.StatusCode,
+                errors = validationException.Errors.Select(e => new
+                {
+                    field = e.PropertyName,
+                    message = e.ErrorMessage
+                })
+            };
+            return context.Response.WriteAsJsonAsync(validationResponse);
+        }
 
         var response = new
         {

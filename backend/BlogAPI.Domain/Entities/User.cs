@@ -20,6 +20,9 @@ public class User
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+    public string? RefreshTokenHash { get; set; }
+    public DateTime? RefreshTokenExpiresAt { get; set; }
+
     // Navigation properties
     public ICollection<Post> Posts { get; set; } = new List<Post>();
 

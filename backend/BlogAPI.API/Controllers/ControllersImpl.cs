@@ -4,6 +4,7 @@ using System.Security.Claims;
 using BlogAPI.Core.Services;
 using BlogAPI.Core.DTOs;
 using BlogAPI.Domain.Exceptions;
+using FluentValidation;
 
 namespace BlogAPI.API.Controllers;
 
@@ -12,10 +13,20 @@ namespace BlogAPI.API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly IValidator<RegisterUserDto> _registerValidator;
+    private readonly IValidator<LoginUserDto> _loginValidator;
+    private readonly IValidator<RefreshTokenRequestDto> _refreshValidator;
 
-    public AuthController(IAuthService authService)
+    public AuthController(
+        IAuthService authService,
+        IValidator<RegisterUserDto> registerValidator,
+        IValidator<LoginUserDto> loginValidator,
+        IValidator<RefreshTokenRequestDto> refreshValidator)
     {
         _authService = authService;
+        _registerValidator = registerValidator;
+        _loginValidator = loginValidator;
+        _refreshValidator = refreshValidator;
     }
 
     /// <summary>
@@ -24,6 +35,8 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Register(RegisterUserDto request)
     {
+        await _registerValidator.ValidateAndThrowAsync(request);
+
         try
         {
             var result = await _authService.RegisterAsync(request);
@@ -41,6 +54,8 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Login(LoginUserDto request)
     {
+        await _loginValidator.ValidateAndThrowAsync(request);
+
         try
         {
             var result = await _authService.LoginAsync(request);
@@ -56,10 +71,19 @@ public class AuthController : ControllerBase
     /// Refresh access token
     /// </summary>
     [HttpPost("refresh")]
-    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Refresh(string refreshToken)
+    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Refresh(RefreshTokenRequestDto request)
     {
-        // TODO: Implement refresh token logic
-        return BadRequest(ApiResponse<AuthResponseDto>.Fail("Refresh token implementation pending", 400));
+        await _refreshValidator.ValidateAndThrowAsync(request);
+
+        try
+        {
+            var result = await _authService.RefreshTokenAsync(request);
+            return Ok(ApiResponse<AuthResponseDto>.Ok(result, "Token refreshed"));
+        }
+        catch (UnauthorizedException ex)
+        {
+            return Unauthorized(ApiResponse<AuthResponseDto>.Fail(ex.Message, 401));
+        }
     }
 
     /// <summary>
@@ -78,10 +102,17 @@ public class AuthController : ControllerBase
 public class PostsController : ControllerBase
 {
     private readonly IPostService _postService;
+    private readonly IValidator<CreatePostDto> _createValidator;
+    private readonly IValidator<UpdatePostDto> _updateValidator;
 
-    public PostsController(IPostService postService)
+    public PostsController(
+        IPostService postService,
+        IValidator<CreatePostDto> createValidator,
+        IValidator<UpdatePostDto> updateValidator)
     {
         _postService = postService;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
 
     /// <summary>
@@ -118,6 +149,8 @@ public class PostsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ApiResponse<PostDto>>> CreatePost(CreatePostDto request)
     {
+        await _createValidator.ValidateAndThrowAsync(request);
+
         try
         {
             var userId = Guid.Parse(User.FindFirst("id")?.Value ?? Guid.Empty.ToString());
@@ -137,6 +170,8 @@ public class PostsController : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult<ApiResponse<PostDto>>> UpdatePost(Guid id, UpdatePostDto request)
     {
+        await _updateValidator.ValidateAndThrowAsync(request);
+
         try
         {
             var userId = Guid.Parse(User.FindFirst("id")?.Value ?? Guid.Empty.ToString());

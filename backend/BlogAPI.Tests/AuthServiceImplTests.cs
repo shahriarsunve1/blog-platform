@@ -145,6 +145,84 @@ public class AuthServiceImplTests
     }
 
     [Fact]
+    public async Task RefreshTokenAsync_ValidPair_IssuesNewTokens()
+    {
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "user@example.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
+            IsActive = true
+        };
+        _userRepository.Setup(r => r.GetByEmailAsync("user@example.com")).ReturnsAsync(user);
+        // IssueTokensAsync mutates `user` in place, so this returns the same
+        // instance with whatever refresh-token hash was just stored on login.
+        _userRepository.Setup(r => r.GetByIdAsync(user.Id)).ReturnsAsync(user);
+
+        var loginResult = await _sut.LoginAsync(new LoginUserDto { Email = "user@example.com", Password = "password123" });
+
+        var refreshResult = await _sut.RefreshTokenAsync(new RefreshTokenRequestDto
+        {
+            AccessToken = loginResult.AccessToken,
+            RefreshToken = loginResult.RefreshToken
+        });
+
+        Assert.NotEmpty(refreshResult.AccessToken);
+        Assert.NotEmpty(refreshResult.RefreshToken);
+        Assert.NotEqual(loginResult.RefreshToken, refreshResult.RefreshToken); // rotated
+    }
+
+    [Fact]
+    public async Task RefreshTokenAsync_WrongRefreshToken_ThrowsUnauthorized()
+    {
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "user@example.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
+            IsActive = true
+        };
+        _userRepository.Setup(r => r.GetByEmailAsync("user@example.com")).ReturnsAsync(user);
+        _userRepository.Setup(r => r.GetByIdAsync(user.Id)).ReturnsAsync(user);
+
+        var loginResult = await _sut.LoginAsync(new LoginUserDto { Email = "user@example.com", Password = "password123" });
+
+        await Assert.ThrowsAsync<UnauthorizedException>(() => _sut.RefreshTokenAsync(new RefreshTokenRequestDto
+        {
+            AccessToken = loginResult.AccessToken,
+            RefreshToken = "not-the-real-refresh-token"
+        }));
+    }
+
+    [Fact]
+    public async Task RefreshTokenAsync_AfterRotation_OldRefreshTokenNoLongerWorks()
+    {
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "user@example.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
+            IsActive = true
+        };
+        _userRepository.Setup(r => r.GetByEmailAsync("user@example.com")).ReturnsAsync(user);
+        _userRepository.Setup(r => r.GetByIdAsync(user.Id)).ReturnsAsync(user);
+
+        var loginResult = await _sut.LoginAsync(new LoginUserDto { Email = "user@example.com", Password = "password123" });
+        await _sut.RefreshTokenAsync(new RefreshTokenRequestDto
+        {
+            AccessToken = loginResult.AccessToken,
+            RefreshToken = loginResult.RefreshToken
+        });
+
+        // The original refresh token was rotated out - reusing it must fail.
+        await Assert.ThrowsAsync<UnauthorizedException>(() => _sut.RefreshTokenAsync(new RefreshTokenRequestDto
+        {
+            AccessToken = loginResult.AccessToken,
+            RefreshToken = loginResult.RefreshToken
+        }));
+    }
+
+    [Fact]
     public async Task LoginAsync_LegacyPreBCryptHash_FailsCleanlyInsteadOfThrowing()
     {
         // Regression test: accounts created before the BCrypt migration have a raw

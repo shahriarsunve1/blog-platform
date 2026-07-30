@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Configuration;
@@ -49,29 +50,13 @@ public class AuthServiceImpl : IAuthService
 
         var createdUser = await _userRepository.AddAsync(user);
 
-        var accessToken = GenerateAccessToken(createdUser);
-        var refreshToken = GenerateRefreshToken();
-
-        return new AuthResponseDto
-        {
-            AccessToken = accessToken,
-            RefreshToken = refreshToken,
-            ExpiresIn = _configuration.GetValue<int>("Jwt:ExpirationMinutes") * 60,
-            User = new UserDto
-            {
-                Id = createdUser.Id,
-                Email = createdUser.Email,
-                FirstName = createdUser.FirstName,
-                LastName = createdUser.LastName,
-                Role = createdUser.Role.ToString()
-            }
-        };
+        return await IssueTokensAsync(createdUser);
     }
 
     public async Task<AuthResponseDto> LoginAsync(LoginUserDto request)
     {
         var user = await _userRepository.GetByEmailAsync(request.Email);
-        
+
         if (user == null || !VerifyPassword(request.Password, user.PasswordHash))
         {
             throw new UnauthorizedException("Invalid email or password");
@@ -82,23 +67,35 @@ public class AuthServiceImpl : IAuthService
             throw new UnauthorizedException("User account is inactive");
         }
 
-        var accessToken = GenerateAccessToken(user);
-        var refreshToken = GenerateRefreshToken();
+        return await IssueTokensAsync(user);
+    }
 
-        return new AuthResponseDto
+    public async Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenRequestDto request)
+    {
+        var principal = GetPrincipalFromExpiredToken(request.AccessToken)
+            ?? throw new UnauthorizedException("Invalid access token");
+
+        var userIdClaim = principal.FindFirst("id")?.Value;
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
         {
-            AccessToken = accessToken,
-            RefreshToken = refreshToken,
-            ExpiresIn = _configuration.GetValue<int>("Jwt:ExpirationMinutes") * 60,
-            User = new UserDto
-            {
-                Id = user.Id,
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Role = user.Role.ToString()
-            }
-        };
+            throw new UnauthorizedException("Invalid access token");
+        }
+
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user == null)
+        {
+            throw new UnauthorizedException("Invalid refresh token");
+        }
+
+        if (user.RefreshTokenHash == null ||
+            user.RefreshTokenExpiresAt == null ||
+            user.RefreshTokenExpiresAt < DateTime.UtcNow ||
+            user.RefreshTokenHash != HashRefreshToken(request.RefreshToken))
+        {
+            throw new UnauthorizedException("Invalid or expired refresh token");
+        }
+
+        return await IssueTokensAsync(user);
     }
 
     public async Task<string> GenerateAccessTokenAsync(Guid userId)
@@ -143,6 +140,68 @@ public class AuthServiceImpl : IAuthService
         }
     }
 
+    /// <summary>
+    /// Issues a fresh access/refresh token pair for the user, persisting the new
+    /// refresh token hash (rotation - the old refresh token stops working).
+    /// </summary>
+    private async Task<AuthResponseDto> IssueTokensAsync(User user)
+    {
+        var accessToken = GenerateAccessToken(user);
+        var refreshToken = GenerateRefreshToken();
+        var refreshDays = _configuration.GetValue<int?>("Jwt:RefreshTokenExpirationDays") ?? 7;
+
+        user.RefreshTokenHash = HashRefreshToken(refreshToken);
+        user.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(refreshDays);
+        await _userRepository.UpdateAsync(user);
+
+        return new AuthResponseDto
+        {
+            AccessToken = accessToken,
+            RefreshToken = refreshToken,
+            ExpiresIn = _configuration.GetValue<int>("Jwt:ExpirationMinutes") * 60,
+            User = new UserDto
+            {
+                Id = user.Id,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Role = user.Role.ToString()
+            }
+        };
+    }
+
+    private ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.ASCII.GetBytes(_configuration["Jwt:SecretKey"] ?? "");
+
+        try
+        {
+            var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = true,
+                ValidIssuer = _configuration["Jwt:Issuer"],
+                ValidateAudience = true,
+                ValidAudience = _configuration["Jwt:Audience"],
+                ValidateLifetime = false // expired tokens are expected here
+            }, out var securityToken);
+
+            if (securityToken is not JwtSecurityToken jwtToken ||
+                !jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            return principal;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private string GenerateAccessToken(User user)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -173,6 +232,11 @@ public class AuthServiceImpl : IAuthService
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(randomNumber);
         return Convert.ToBase64String(randomNumber);
+    }
+
+    private static string HashRefreshToken(string refreshToken)
+    {
+        return Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken)));
     }
 
     private string HashPassword(string password)

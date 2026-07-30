@@ -32,6 +32,11 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface RefreshTokenRequest {
+  accessToken: string;
+  refreshToken: string;
+}
+
 /**
  * Blog post models
  */

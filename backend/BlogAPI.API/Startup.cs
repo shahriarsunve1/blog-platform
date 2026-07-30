@@ -1,10 +1,12 @@
 using BlogAPI.Data.DbContexts;
 using BlogAPI.Data.Repositories;
 using BlogAPI.Core.Services;
+using BlogAPI.Core.Validators;
 using BlogAPI.API.Middleware;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using FluentValidation;
 using System.Text;
 
 namespace BlogAPI.API;
@@ -37,6 +39,9 @@ public class Startup
         services.AddScoped<IPostService, PostService>();
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<ITagService, TagService>();
+
+        // Validation
+        services.AddValidatorsFromAssemblyContaining<RegisterUserDtoValidator>();
 
         // Authentication
         var jwtSettings = _configuration.GetSection("Jwt");
