@@ -21,8 +21,8 @@ public interface IAuthService
 public interface IPostService
 {
     Task<PostDto> CreatePostAsync(Guid userId, CreatePostDto dto);
-    Task<PostDto> GetPostByIdAsync(Guid postId);
-    Task<PaginatedResponse<PostDto>> GetPublishedPostsAsync(int pageNumber = 1, int pageSize = 10, Guid? categoryId = null, Guid? tagId = null, string? search = null);
+    Task<PostDto> GetPostByIdAsync(Guid postId, Guid? currentUserId = null);
+    Task<PaginatedResponse<PostDto>> GetPublishedPostsAsync(int pageNumber = 1, int pageSize = 10, Guid? categoryId = null, Guid? tagId = null, string? search = null, Guid? currentUserId = null);
     Task<List<PostDto>> GetUserPostsAsync(Guid userId);
     Task<PostDto> UpdatePostAsync(Guid postId, UpdatePostDto dto, Guid userId);
     Task DeletePostAsync(Guid postId, Guid userId);
@@ -64,4 +64,13 @@ public interface ICommentService
     Task<List<CommentDto>> GetByPostIdAsync(Guid postId);
     Task<CommentDto> CreateAsync(Guid postId, Guid userId, CreateCommentDto dto);
     Task DeleteAsync(Guid commentId, Guid userId);
+}
+
+/// <summary>
+/// Interface for like service
+/// </summary>
+public interface ILikeService
+{
+    Task<int> LikeAsync(Guid postId, Guid userId);
+    Task<int> UnlikeAsync(Guid postId, Guid userId);
 }

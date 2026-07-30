@@ -73,4 +73,28 @@ describe('PostService', () => {
     expect(req.request.method).toBe('DELETE');
     req.flush({ success: true, statusCode: 200, message: '', data: null, errors: [] });
   });
+
+  it('getMyPosts() requests the current user\'s posts', () => {
+    service.getMyPosts().subscribe();
+
+    const req = httpMock.expectOne(`${apiUrl}/mine`);
+    expect(req.request.method).toBe('GET');
+    req.flush({ success: true, statusCode: 200, message: '', data: [], errors: [] });
+  });
+
+  it('like() posts to the like endpoint', () => {
+    service.like('abc-123').subscribe();
+
+    const req = httpMock.expectOne(`${apiUrl}/abc-123/like`);
+    expect(req.request.method).toBe('POST');
+    req.flush({ success: true, statusCode: 200, message: '', data: 1, errors: [] });
+  });
+
+  it('unlike() deletes the like endpoint', () => {
+    service.unlike('abc-123').subscribe();
+
+    const req = httpMock.expectOne(`${apiUrl}/abc-123/like`);
+    expect(req.request.method).toBe('DELETE');
+    req.flush({ success: true, statusCode: 200, message: '', data: 0, errors: [] });
+  });
 });

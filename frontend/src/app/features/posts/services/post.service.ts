@@ -61,9 +61,23 @@ export class PostService {
   }
 
   /**
-   * Get user's posts
+   * Get the current user's own posts (any status - draft/published/archived)
    */
-  getUserPosts(userId: string): Observable<ApiResponse<Post[]>> {
-    return this.http.get<ApiResponse<Post[]>>(`${this.apiUrl}/user/${userId}`);
+  getMyPosts(): Observable<ApiResponse<Post[]>> {
+    return this.http.get<ApiResponse<Post[]>>(`${this.apiUrl}/mine`);
+  }
+
+  /**
+   * Like a post (idempotent)
+   */
+  like(postId: string): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/${postId}/like`, {});
+  }
+
+  /**
+   * Unlike a post (idempotent)
+   */
+  unlike(postId: string): Observable<ApiResponse<number>> {
+    return this.http.delete<ApiResponse<number>>(`${this.apiUrl}/${postId}/like`);
   }
 }

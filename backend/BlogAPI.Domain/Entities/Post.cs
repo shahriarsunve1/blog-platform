@@ -23,6 +23,7 @@ public class Post
     public ICollection<Category> Categories { get; set; } = new List<Category>();
     public ICollection<Tag> Tags { get; set; } = new List<Tag>();
     public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+    public ICollection<Like> Likes { get; set; } = new List<Like>();
 
     public bool IsPublished() => Status == PostStatus.Published && PublishedAt.HasValue;
 }

@@ -31,6 +31,16 @@
     <div class="content-body" [innerHTML]="post.content"></div>
 
     <div class="post-footer">
+      <button
+        class="like-button"
+        [class.liked]="post.isLikedByCurrentUser"
+        [disabled]="!currentUserId"
+        [title]="currentUserId ? '' : 'Log in to like posts'"
+        (click)="toggleLike()"
+      >
+        <span class="heart">{{ post.isLikedByCurrentUser ? '♥' : '♡' }}</span>
+        {{ post.likeCount }}
+      </button>
       <span class="view-count">
         <i class="icon-eye"></i> {{ post.viewCount }} views
       </span>

@@ -1,0 +1,32 @@
+<div class="posts-container">
+  <div class="posts-header">
+    <h1>My Posts</h1>
+    <button class="btn btn-primary" (click)="createPost()">
+      <span>+ New Post</span>
+    </button>
+  </div>
+
+  <div class="loading-spinner" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading your posts...</p>
+  </div>
+
+  <div class="my-posts-list" *ngIf="!isLoading && posts.length > 0">
+    <div class="my-post-row" *ngFor="let post of posts" (click)="viewPost(post.id)">
+      <div class="my-post-info">
+        <span class="badge" [class]="'badge-' + post.status.toLowerCase()">{{ post.status }}</span>
+        <h3>{{ post.title }}</h3>
+        <span class="my-post-date">{{ post.updatedAt | date: 'medium' }}</span>
+      </div>
+      <div class="my-post-actions">
+        <button class="btn-icon" (click)="editPost(post.id, $event)">Edit</button>
+        <button class="btn-icon btn-icon-danger" (click)="deletePost(post, $event)">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="no-posts" *ngIf="!isLoading && posts.length === 0">
+    <h3>You haven't written anything yet</h3>
+    <p>Create your first post to see it here.</p>
+  </div>
+</div>

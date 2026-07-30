@@ -21,6 +21,7 @@
       <span class="date">{{ post.publishedAt | date: 'short' }}</span>
     </div>
     <div class="post-stats">
+      <span class="likes" *ngIf="post.likeCount > 0">♥ {{ post.likeCount }}</span>
       <span class="views">
         <i class="icon-eye"></i> {{ post.viewCount }}
       </span>

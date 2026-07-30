@@ -122,6 +122,49 @@ public class PostServiceTests
     }
 
     [Fact]
+    public async Task GetPostByIdAsync_ComputesLikeCountAndCurrentUserLikeStatus()
+    {
+        var postId = Guid.NewGuid();
+        var likerId = Guid.NewGuid();
+        var otherLikerId = Guid.NewGuid();
+        var post = new Post
+        {
+            Id = postId,
+            Likes = new List<Like>
+            {
+                new() { PostId = postId, UserId = likerId },
+                new() { PostId = postId, UserId = otherLikerId }
+            }
+        };
+        _postRepository.Setup(r => r.GetPostWithDetailsAsync(postId)).ReturnsAsync(post);
+
+        var likedByViewer = await _sut.GetPostByIdAsync(postId, likerId);
+        var viewedAnonymously = await _sut.GetPostByIdAsync(postId, null);
+
+        Assert.Equal(2, likedByViewer.LikeCount);
+        Assert.True(likedByViewer.IsLikedByCurrentUser);
+        Assert.Equal(2, viewedAnonymously.LikeCount);
+        Assert.False(viewedAnonymously.IsLikedByCurrentUser);
+    }
+
+    [Fact]
+    public async Task GetUserPostsAsync_ReturnsAllStatusesIncludingDrafts()
+    {
+        var userId = Guid.NewGuid();
+        _userRepository.Setup(r => r.GetByIdAsync(userId)).ReturnsAsync(new User { Id = userId });
+        _postRepository.Setup(r => r.GetUserPostsAsync(userId)).ReturnsAsync(new List<Post>
+        {
+            new() { Id = Guid.NewGuid(), UserId = userId, Status = PostStatus.Draft },
+            new() { Id = Guid.NewGuid(), UserId = userId, Status = PostStatus.Published }
+        });
+
+        var result = await _sut.GetUserPostsAsync(userId);
+
+        Assert.Equal(2, result.Count);
+        Assert.Contains(result, p => p.Status == "Draft");
+    }
+
+    [Fact]
     public async Task UpdatePostAsync_NotTheAuthor_ThrowsUnauthorized()
     {
         var authorId = Guid.NewGuid();

@@ -82,6 +82,31 @@ export class PostDetailComponent implements OnInit {
     return comment.author?.id === this.currentUserId || this.isAdmin;
   }
 
+  toggleLike(): void {
+    if (!this.post || !this.currentUserId) return;
+
+    const wasLiked = this.post.isLikedByCurrentUser;
+    // Optimistic update - flip immediately, roll back on error.
+    this.post.isLikedByCurrentUser = !wasLiked;
+    this.post.likeCount += wasLiked ? -1 : 1;
+
+    const request$ = wasLiked ? this.postService.unlike(this.post.id) : this.postService.like(this.post.id);
+    request$.subscribe({
+      next: (response) => {
+        if (this.post && response.data !== undefined) {
+          this.post.likeCount = response.data;
+        }
+      },
+      error: (err) => {
+        console.error('Error toggling like:', err);
+        if (this.post) {
+          this.post.isLikedByCurrentUser = wasLiked;
+          this.post.likeCount += wasLiked ? 1 : -1;
+        }
+      }
+    });
+  }
+
   postComment(): void {
     if (!this.post || !this.newCommentText.trim()) return;
 

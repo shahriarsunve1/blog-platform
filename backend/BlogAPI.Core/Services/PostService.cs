@@ -28,14 +28,14 @@ public class PostService : IPostService
         _tagRepository = tagRepository;
     }
 
-    public async Task<PaginatedResponse<PostDto>> GetPublishedPostsAsync(int pageNumber = 1, int pageSize = 10, Guid? categoryId = null, Guid? tagId = null, string? search = null)
+    public async Task<PaginatedResponse<PostDto>> GetPublishedPostsAsync(int pageNumber = 1, int pageSize = 10, Guid? categoryId = null, Guid? tagId = null, string? search = null, Guid? currentUserId = null)
     {
         var posts = await _postRepository.GetPublishedPostsAsync(pageNumber, pageSize, categoryId, tagId, search);
         var totalCount = await _postRepository.GetPublishedPostsCountAsync(categoryId, tagId, search);
 
         return new PaginatedResponse<PostDto>
         {
-            Items = posts.Select(MapToPostDto).ToList(),
+            Items = posts.Select(p => MapToPostDto(p, currentUserId)).ToList(),
             PageNumber = pageNumber,
             PageSize = pageSize,
             TotalCount = totalCount,
@@ -43,13 +43,13 @@ public class PostService : IPostService
         };
     }
 
-    public async Task<PostDto> GetPostByIdAsync(Guid postId)
+    public async Task<PostDto> GetPostByIdAsync(Guid postId, Guid? currentUserId = null)
     {
         var post = await _postRepository.GetPostWithDetailsAsync(postId);
         if (post == null)
             throw new EntityNotFoundException("Post not found");
 
-        return MapToPostDto(post);
+        return MapToPostDto(post, currentUserId);
     }
 
     public async Task<PostDto> CreatePostAsync(Guid userId, CreatePostDto request)
@@ -130,10 +130,10 @@ public class PostService : IPostService
             throw new EntityNotFoundException("User not found");
 
         var posts = await _postRepository.GetUserPostsAsync(userId);
-        return posts.Select(MapToPostDto).ToList();
+        return posts.Select(p => MapToPostDto(p, userId)).ToList();
     }
 
-    private PostDto MapToPostDto(Post post)
+    private PostDto MapToPostDto(Post post, Guid? currentUserId = null)
     {
         return new PostDto
         {
@@ -155,7 +155,9 @@ public class PostService : IPostService
                 LastName = post.Author.LastName
             } : null,
             Categories = post.Categories.Select(c => c.Name).ToList(),
-            Tags = post.Tags.Select(t => t.Name).ToList()
+            Tags = post.Tags.Select(t => t.Name).ToList(),
+            LikeCount = post.Likes.Count,
+            IsLikedByCurrentUser = currentUserId.HasValue && post.Likes.Any(l => l.UserId == currentUserId.Value)
         };
     }
 }

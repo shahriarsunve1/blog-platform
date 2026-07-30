@@ -17,6 +17,7 @@ public class BlogContext : DbContext
     public DbSet<Category> Categories { get; set; }
     public DbSet<Tag> Tags { get; set; }
     public DbSet<Comment> Comments { get; set; }
+    public DbSet<Like> Likes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -78,6 +79,23 @@ public class BlogContext : DbContext
             .HasOne(c => c.Author)
             .WithMany()
             .HasForeignKey(c => c.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Like configuration
+        modelBuilder.Entity<Like>()
+            .HasKey(l => l.Id);
+        modelBuilder.Entity<Like>()
+            .HasIndex(l => new { l.PostId, l.UserId })
+            .IsUnique();
+        modelBuilder.Entity<Like>()
+            .HasOne(l => l.Post)
+            .WithMany(p => p.Likes)
+            .HasForeignKey(l => l.PostId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<Like>()
+            .HasOne(l => l.User)
+            .WithMany()
+            .HasForeignKey(l => l.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // Starter categories/tags so posts have something to attach to out of the box

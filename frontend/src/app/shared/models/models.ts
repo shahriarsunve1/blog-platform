@@ -51,6 +51,8 @@ export interface Post {
   author?: User;
   categories: string[];
   tags: string[];
+  likeCount: number;
+  isLikedByCurrentUser: boolean;
   createdAt: string;
   updatedAt: string;
   publishedAt?: string;

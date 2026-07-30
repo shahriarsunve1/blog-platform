@@ -33,6 +33,7 @@ public class Startup
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
         services.AddScoped<ICommentRepository, CommentRepository>();
+        services.AddScoped<ILikeRepository, LikeRepository>();
 
         // Services
         services.AddScoped<IAuthService, AuthServiceImpl>();
@@ -41,6 +42,7 @@ public class Startup
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<ITagService, TagService>();
         services.AddScoped<ICommentService, CommentService>();
+        services.AddScoped<ILikeService, LikeService>();
 
         // Validation
         services.AddValidatorsFromAssemblyContaining<RegisterUserDtoValidator>();

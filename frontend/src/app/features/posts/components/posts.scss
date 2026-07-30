@@ -192,6 +192,104 @@
     color: var(--color-text-faint);
     font-size: 13px;
   }
+
+  .my-posts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .my-post-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+
+    &:hover {
+      border-color: var(--color-accent);
+    }
+
+    .my-post-info {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+
+      .badge {
+        padding: 3px 9px;
+        border-radius: 100px;
+        font-size: 10.5px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        white-space: nowrap;
+        flex-shrink: 0;
+
+        &.badge-published {
+          background-color: var(--color-success-soft);
+          color: var(--color-success);
+        }
+
+        &.badge-draft {
+          background-color: var(--color-accent-soft);
+          color: var(--color-accent-hover);
+        }
+
+        &.badge-archived {
+          background-color: var(--color-border);
+          color: var(--color-text-muted);
+        }
+      }
+
+      h3 {
+        font-size: 15.5px;
+        color: var(--color-text);
+        margin: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .my-post-date {
+        color: var(--color-text-faint);
+        font-size: 12.5px;
+        white-space: nowrap;
+      }
+    }
+
+    .my-post-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+
+      .btn-icon {
+        padding: 6px 12px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--color-border);
+        background: var(--color-bg);
+        color: var(--color-text-muted);
+        font-size: 12.5px;
+        font-weight: 600;
+        cursor: pointer;
+
+        &:hover {
+          border-color: var(--color-accent);
+          color: var(--color-accent);
+        }
+
+        &.btn-icon-danger:hover {
+          border-color: var(--color-danger);
+          color: var(--color-danger);
+        }
+      }
+    }
+  }
 }
 
 // Post Detail Styles
@@ -368,6 +466,43 @@
         display: flex;
         align-items: center;
         gap: 5px;
+      }
+
+      .like-button {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 100px;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface);
+        color: var(--color-text-muted);
+        font-size: 13px;
+        font-weight: 600;
+        font-family: var(--font-sans);
+        cursor: pointer;
+        transition: all 0.15s ease;
+
+        .heart {
+          font-size: 15px;
+          line-height: 1;
+        }
+
+        &:hover:not(:disabled) {
+          border-color: var(--color-danger);
+          color: var(--color-danger);
+        }
+
+        &.liked {
+          border-color: var(--color-danger);
+          background: var(--color-danger-soft);
+          color: var(--color-danger);
+        }
+
+        &:disabled {
+          cursor: not-allowed;
+          opacity: 0.6;
+        }
       }
     }
   }

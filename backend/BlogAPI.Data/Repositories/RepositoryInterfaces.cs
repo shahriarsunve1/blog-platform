@@ -59,3 +59,11 @@ public interface ICommentRepository : IGenericRepository<Comment>
 {
     Task<List<Comment>> GetByPostIdAsync(Guid postId);
 }
+
+/// <summary>
+/// Like repository interface
+/// </summary>
+public interface ILikeRepository : IGenericRepository<Like>
+{
+    Task<Like?> GetByPostAndUserAsync(Guid postId, Guid userId);
+}

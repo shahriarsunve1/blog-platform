@@ -43,6 +43,8 @@ public class PostDto
     public UserDto? Author { get; set; }
     public List<string> Categories { get; set; } = new();
     public List<string> Tags { get; set; } = new();
+    public int LikeCount { get; set; }
+    public bool IsLikedByCurrentUser { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public DateTime? PublishedAt { get; set; }

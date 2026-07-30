@@ -103,6 +103,7 @@ public class PostRepository : GenericRepository<Post>, IPostRepository
             .Include(p => p.Author)
             .Include(p => p.Categories)
             .Include(p => p.Tags)
+            .Include(p => p.Likes)
             .OrderByDescending(p => p.PublishedAt)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
@@ -116,6 +117,7 @@ public class PostRepository : GenericRepository<Post>, IPostRepository
             .Include(p => p.Author)
             .Include(p => p.Categories)
             .Include(p => p.Tags)
+            .Include(p => p.Likes)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
     }
@@ -126,6 +128,7 @@ public class PostRepository : GenericRepository<Post>, IPostRepository
             .Include(p => p.Author)
             .Include(p => p.Categories)
             .Include(p => p.Tags)
+            .Include(p => p.Likes)
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
@@ -191,5 +194,20 @@ public class CommentRepository : GenericRepository<Comment>, ICommentRepository
             .Include(c => c.Author)
             .OrderBy(c => c.CreatedAt)
             .ToListAsync();
+    }
+}
+
+/// <summary>
+/// Like repository implementation
+/// </summary>
+public class LikeRepository : GenericRepository<Like>, ILikeRepository
+{
+    public LikeRepository(BlogContext context) : base(context)
+    {
+    }
+
+    public async Task<Like?> GetByPostAndUserAsync(Guid postId, Guid userId)
+    {
+        return await _context.Likes.FirstOrDefaultAsync(l => l.PostId == postId && l.UserId == userId);
     }
 }

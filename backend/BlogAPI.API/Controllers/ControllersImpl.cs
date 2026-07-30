@@ -102,18 +102,29 @@ public class AuthController : ControllerBase
 public class PostsController : ControllerBase
 {
     private readonly IPostService _postService;
+    private readonly ILikeService _likeService;
     private readonly IValidator<CreatePostDto> _createValidator;
     private readonly IValidator<UpdatePostDto> _updateValidator;
 
     public PostsController(
         IPostService postService,
+        ILikeService likeService,
         IValidator<CreatePostDto> createValidator,
         IValidator<UpdatePostDto> updateValidator)
     {
         _postService = postService;
+        _likeService = likeService;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
     }
+
+    /// <summary>
+    /// The requesting user's id if authenticated, otherwise null. Works on
+    /// endpoints without [Authorize] too - the JWT middleware still populates
+    /// claims for any request that presents a valid token.
+    /// </summary>
+    private Guid? CurrentUserId =>
+        Guid.TryParse(User.FindFirst("id")?.Value, out var id) ? id : null;
 
     /// <summary>
     /// Get published posts with pagination
@@ -126,8 +137,20 @@ public class PostsController : ControllerBase
         [FromQuery] Guid? tagId = null,
         [FromQuery] string? search = null)
     {
-        var result = await _postService.GetPublishedPostsAsync(pageNumber, pageSize, categoryId, tagId, search);
+        var result = await _postService.GetPublishedPostsAsync(pageNumber, pageSize, categoryId, tagId, search, CurrentUserId);
         return Ok(ApiResponse<PaginatedResponse<PostDto>>.Ok(result));
+    }
+
+    /// <summary>
+    /// Get all of the current user's own posts, any status (draft/published/archived)
+    /// </summary>
+    [Authorize]
+    [HttpGet("mine")]
+    public async Task<ActionResult<ApiResponse<List<PostDto>>>> GetMyPosts()
+    {
+        var userId = Guid.Parse(User.FindFirst("id")?.Value ?? Guid.Empty.ToString());
+        var result = await _postService.GetUserPostsAsync(userId);
+        return Ok(ApiResponse<List<PostDto>>.Ok(result));
     }
 
     /// <summary>
@@ -138,12 +161,48 @@ public class PostsController : ControllerBase
     {
         try
         {
-            var result = await _postService.GetPostByIdAsync(id);
+            var result = await _postService.GetPostByIdAsync(id, CurrentUserId);
             return Ok(ApiResponse<PostDto>.Ok(result));
         }
         catch (EntityNotFoundException ex)
         {
             return NotFound(ApiResponse<PostDto>.Fail(ex.Message, 404));
+        }
+    }
+
+    /// <summary>
+    /// Like a post (idempotent)
+    /// </summary>
+    [Authorize]
+    [HttpPost("{id}/like")]
+    public async Task<ActionResult<ApiResponse<int>>> Like(Guid id)
+    {
+        try
+        {
+            var likeCount = await _likeService.LikeAsync(id, CurrentUserId!.Value);
+            return Ok(ApiResponse<int>.Ok(likeCount, "Post liked"));
+        }
+        catch (EntityNotFoundException ex)
+        {
+            return NotFound(ApiResponse<int>.Fail(ex.Message, 404));
+        }
+    }
+
+    /// <summary>
+    /// Unlike a post (idempotent)
+    /// </summary>
+    [Authorize]
+    [HttpDelete("{id}/like")]
+    public async Task<ActionResult<ApiResponse<int>>> Unlike(Guid id)
+    {
+        try
+        {
+            var likeCount = await _likeService.UnlikeAsync(id, CurrentUserId!.Value);
+            return Ok(ApiResponse<int>.Ok(likeCount, "Post unliked"));
+        }
+        catch (EntityNotFoundException ex)
+        {
+            return NotFound(ApiResponse<int>.Fail(ex.Message, 404));
         }
     }
 
