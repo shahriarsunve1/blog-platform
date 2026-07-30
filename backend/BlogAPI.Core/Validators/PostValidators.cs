@@ -34,3 +34,19 @@ public class CreateCommentDtoValidator : AbstractValidator<CreateCommentDto>
         RuleFor(x => x.Content).NotEmpty().MaximumLength(2000);
     }
 }
+
+public class CreateCategoryDtoValidator : AbstractValidator<CreateCategoryDto>
+{
+    public CreateCategoryDtoValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
+    }
+}
+
+public class CreateTagDtoValidator : AbstractValidator<CreateTagDto>
+{
+    public CreateTagDtoValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(50);
+    }
+}

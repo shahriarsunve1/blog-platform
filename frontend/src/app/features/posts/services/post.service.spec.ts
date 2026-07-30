@@ -28,6 +28,14 @@ describe('PostService', () => {
     req.flush({ success: true, statusCode: 200, message: '', data: { items: [], totalCount: 0, pageNumber: 2, pageSize: 5, totalPages: 0 }, errors: [] });
   });
 
+  it('getPublishedPosts() appends categoryId/tagId when provided', () => {
+    service.getPublishedPosts(1, 10, 'cat-1', 'tag-1').subscribe();
+
+    const req = httpMock.expectOne(`${apiUrl}?pageNumber=1&pageSize=10&categoryId=cat-1&tagId=tag-1`);
+    expect(req.request.method).toBe('GET');
+    req.flush({ success: true, statusCode: 200, message: '', data: { items: [], totalCount: 0, pageNumber: 1, pageSize: 10, totalPages: 0 }, errors: [] });
+  });
+
   it('getPostById() requests the specific post', () => {
     service.getPostById('abc-123').subscribe();
 

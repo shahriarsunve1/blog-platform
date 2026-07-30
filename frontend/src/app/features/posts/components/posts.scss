@@ -62,6 +62,44 @@
     }
   }
 
+  .posts-filters {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+
+    .filter-select {
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+      background: var(--color-surface);
+      color: var(--color-text);
+      font-size: 13.5px;
+      font-family: var(--font-sans);
+      cursor: pointer;
+
+      &:focus {
+        outline: none;
+        border-color: var(--color-accent);
+      }
+    }
+
+    .clear-filters {
+      background: none;
+      border: none;
+      color: var(--color-accent);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0;
+
+      &:hover {
+        color: var(--color-accent-hover);
+      }
+    }
+  }
+
   .posts-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -616,6 +654,51 @@
         background: var(--color-accent);
         border-color: var(--color-accent);
         color: white;
+      }
+    }
+
+    .add-taxonomy {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+
+      input {
+        flex: 1;
+        max-width: 220px;
+        padding: 7px 12px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--color-border);
+        background: var(--color-bg);
+        color: var(--color-text);
+        font-size: 13px;
+        font-family: var(--font-sans);
+
+        &:focus {
+          outline: none;
+          border-color: var(--color-accent);
+        }
+      }
+
+      button {
+        padding: 7px 14px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--color-border);
+        background: var(--color-surface);
+        color: var(--color-text-muted);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+
+        &:hover:not(:disabled) {
+          border-color: var(--color-accent);
+          color: var(--color-accent);
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
       }
     }
   }

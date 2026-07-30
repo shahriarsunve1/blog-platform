@@ -119,9 +119,13 @@ public class PostsController : ControllerBase
     /// Get published posts with pagination
     /// </summary>
     [HttpGet]
-    public async Task<ActionResult<ApiResponse<PaginatedResponse<PostDto>>>> GetPublishedPosts([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    public async Task<ActionResult<ApiResponse<PaginatedResponse<PostDto>>>> GetPublishedPosts(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] Guid? categoryId = null,
+        [FromQuery] Guid? tagId = null)
     {
-        var result = await _postService.GetPublishedPostsAsync(pageNumber, pageSize);
+        var result = await _postService.GetPublishedPostsAsync(pageNumber, pageSize, categoryId, tagId);
         return Ok(ApiResponse<PaginatedResponse<PostDto>>.Ok(result));
     }
 

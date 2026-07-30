@@ -6,6 +6,22 @@
     </button>
   </div>
 
+  <div class="posts-filters">
+    <select class="filter-select" [(ngModel)]="selectedCategoryId" (ngModelChange)="onFilterChange()">
+      <option value="">All categories</option>
+      <option *ngFor="let category of categories" [value]="category.id">{{ category.name }}</option>
+    </select>
+
+    <select class="filter-select" [(ngModel)]="selectedTagId" (ngModelChange)="onFilterChange()">
+      <option value="">All tags</option>
+      <option *ngFor="let tag of tags" [value]="tag.id">{{ tag.name }}</option>
+    </select>
+
+    <button class="clear-filters" *ngIf="hasActiveFilters" (click)="clearFilters()">
+      Clear filters
+    </button>
+  </div>
+
   <div class="loading-spinner" *ngIf="isLoading">
     <div class="spinner"></div>
     <p>Loading posts...</p>

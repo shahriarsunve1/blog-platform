@@ -73,10 +73,18 @@ export interface Category {
   slug: string;
 }
 
+export interface CreateCategoryDto {
+  name: string;
+}
+
 export interface Tag {
   id: string;
   name: string;
   slug: string;
+}
+
+export interface CreateTagDto {
+  name: string;
 }
 
 export enum PostStatus {

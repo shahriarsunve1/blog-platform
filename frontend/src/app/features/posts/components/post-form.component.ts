@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { forkJoin } from 'rxjs';
 import { PostService } from '../services/post.service';
@@ -13,7 +13,7 @@ import { Category, CreatePostDto, Tag, UpdatePostDto } from '../../../shared/mod
   templateUrl: './post-form.component.html',
   styleUrls: ['./posts.scss'],
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule]
+  imports: [ReactiveFormsModule, FormsModule, CommonModule]
 })
 export class PostFormComponent implements OnInit {
   form!: FormGroup;
@@ -29,6 +29,12 @@ export class PostFormComponent implements OnInit {
   tags: Tag[] = [];
   selectedCategoryIds: string[] = [];
   selectedTagIds: string[] = [];
+
+  newCategoryName = '';
+  newTagName = '';
+  isAddingCategory = false;
+  isAddingTag = false;
+  taxonomyError = '';
 
   constructor(
     private fb: FormBuilder,
@@ -125,6 +131,50 @@ export class PostFormComponent implements OnInit {
     this.selectedTagIds = this.isTagSelected(id)
       ? this.selectedTagIds.filter(t => t !== id)
       : [...this.selectedTagIds, id];
+  }
+
+  addCategory(): void {
+    const name = this.newCategoryName.trim();
+    if (!name) return;
+
+    this.isAddingCategory = true;
+    this.taxonomyError = '';
+    this.taxonomyService.createCategory({ name }).subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.categories = [...this.categories, response.data].sort((a, b) => a.name.localeCompare(b.name));
+          this.selectedCategoryIds = [...this.selectedCategoryIds, response.data.id];
+        }
+        this.newCategoryName = '';
+        this.isAddingCategory = false;
+      },
+      error: (err) => {
+        this.taxonomyError = err.error?.message || 'Failed to add category';
+        this.isAddingCategory = false;
+      }
+    });
+  }
+
+  addTag(): void {
+    const name = this.newTagName.trim();
+    if (!name) return;
+
+    this.isAddingTag = true;
+    this.taxonomyError = '';
+    this.taxonomyService.createTag({ name }).subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.tags = [...this.tags, response.data].sort((a, b) => a.name.localeCompare(b.name));
+          this.selectedTagIds = [...this.selectedTagIds, response.data.id];
+        }
+        this.newTagName = '';
+        this.isAddingTag = false;
+      },
+      error: (err) => {
+        this.taxonomyError = err.error?.message || 'Failed to add tag';
+        this.isAddingTag = false;
+      }
+    });
   }
 
   onSubmit(): void {

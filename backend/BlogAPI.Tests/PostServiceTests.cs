@@ -30,6 +30,20 @@ public class PostServiceTests
     }
 
     [Fact]
+    public async Task GetPublishedPostsAsync_PassesCategoryAndTagFiltersThrough()
+    {
+        var categoryId = Guid.NewGuid();
+        var tagId = Guid.NewGuid();
+        _postRepository.Setup(r => r.GetPublishedPostsAsync(1, 10, categoryId, tagId)).ReturnsAsync(new List<Post>());
+        _postRepository.Setup(r => r.GetPublishedPostsCountAsync(categoryId, tagId)).ReturnsAsync(0);
+
+        await _sut.GetPublishedPostsAsync(1, 10, categoryId, tagId);
+
+        _postRepository.Verify(r => r.GetPublishedPostsAsync(1, 10, categoryId, tagId), Times.Once);
+        _postRepository.Verify(r => r.GetPublishedPostsCountAsync(categoryId, tagId), Times.Once);
+    }
+
+    [Fact]
     public async Task CreatePostAsync_UnknownUser_ThrowsEntityNotFound()
     {
         _userRepository.Setup(r => r.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync((User?)null);

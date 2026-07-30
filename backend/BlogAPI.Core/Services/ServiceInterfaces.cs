@@ -22,7 +22,7 @@ public interface IPostService
 {
     Task<PostDto> CreatePostAsync(Guid userId, CreatePostDto dto);
     Task<PostDto> GetPostByIdAsync(Guid postId);
-    Task<PaginatedResponse<PostDto>> GetPublishedPostsAsync(int pageNumber = 1, int pageSize = 10);
+    Task<PaginatedResponse<PostDto>> GetPublishedPostsAsync(int pageNumber = 1, int pageSize = 10, Guid? categoryId = null, Guid? tagId = null);
     Task<List<PostDto>> GetUserPostsAsync(Guid userId);
     Task<PostDto> UpdatePostAsync(Guid postId, UpdatePostDto dto, Guid userId);
     Task DeletePostAsync(Guid postId, Guid userId);
@@ -44,6 +44,7 @@ public interface IUserService
 public interface ICategoryService
 {
     Task<List<CategoryDto>> GetAllAsync();
+    Task<CategoryDto> CreateAsync(CreateCategoryDto dto);
 }
 
 /// <summary>
@@ -52,6 +53,7 @@ public interface ICategoryService
 public interface ITagService
 {
     Task<List<TagDto>> GetAllAsync();
+    Task<TagDto> CreateAsync(CreateTagDto dto);
 }
 
 /// <summary>

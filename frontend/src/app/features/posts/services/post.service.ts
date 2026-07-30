@@ -18,10 +18,16 @@ export class PostService {
   /**
    * Get all published posts
    */
-  getPublishedPosts(pageNumber: number = 1, pageSize: number = 10): Observable<ApiResponse<PaginatedResponse<Post>>> {
-    return this.http.get<ApiResponse<PaginatedResponse<Post>>>(
-      `${this.apiUrl}?pageNumber=${pageNumber}&pageSize=${pageSize}`
-    );
+  getPublishedPosts(
+    pageNumber: number = 1,
+    pageSize: number = 10,
+    categoryId?: string,
+    tagId?: string
+  ): Observable<ApiResponse<PaginatedResponse<Post>>> {
+    let url = `${this.apiUrl}?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+    if (categoryId) url += `&categoryId=${categoryId}`;
+    if (tagId) url += `&tagId=${tagId}`;
+    return this.http.get<ApiResponse<PaginatedResponse<Post>>>(url);
   }
 
   /**

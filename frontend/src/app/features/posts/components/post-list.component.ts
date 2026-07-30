@@ -3,7 +3,8 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PostService } from '../services/post.service';
-import { Post } from '../../../shared/models/models';
+import { TaxonomyService } from '../services/taxonomy.service';
+import { Category, Post, Tag } from '../../../shared/models/models';
 import { PostCardComponent } from './post-card.component';
 
 @Component({
@@ -22,31 +23,56 @@ export class PostListComponent implements OnInit {
   totalCount = 0;
   searchQuery = '';
 
+  categories: Category[] = [];
+  tags: Tag[] = [];
+  selectedCategoryId = '';
+  selectedTagId = '';
+
   constructor(
     private postService: PostService,
+    private taxonomyService: TaxonomyService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
+    this.taxonomyService.getCategories().subscribe({
+      next: (response) => (this.categories = response.data ?? [])
+    });
+    this.taxonomyService.getTags().subscribe({
+      next: (response) => (this.tags = response.data ?? [])
+    });
     this.loadPosts();
   }
 
   loadPosts(): void {
     this.isLoading = true;
-    this.postService.getPublishedPosts(this.currentPage, this.pageSize).subscribe({
-      next: (response) => {
-        if (response.data) {
-          this.posts = response.data.items;
-          this.totalCount = response.data.totalCount;
-          this.totalPages = response.data.totalPages;
+    this.postService
+      .getPublishedPosts(this.currentPage, this.pageSize, this.selectedCategoryId || undefined, this.selectedTagId || undefined)
+      .subscribe({
+        next: (response) => {
+          if (response.data) {
+            this.posts = response.data.items;
+            this.totalCount = response.data.totalCount;
+            this.totalPages = response.data.totalPages;
+          }
+          this.isLoading = false;
+        },
+        error: (err) => {
+          console.error('Error loading posts:', err);
+          this.isLoading = false;
         }
-        this.isLoading = false;
-      },
-      error: (err) => {
-        console.error('Error loading posts:', err);
-        this.isLoading = false;
-      }
-    });
+      });
+  }
+
+  onFilterChange(): void {
+    this.currentPage = 1;
+    this.loadPosts();
+  }
+
+  clearFilters(): void {
+    this.selectedCategoryId = '';
+    this.selectedTagId = '';
+    this.onFilterChange();
   }
 
   viewPost(postId: string): void {
@@ -80,5 +106,9 @@ export class PostListComponent implements OnInit {
 
   get pagesArray(): number[] {
     return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  }
+
+  get hasActiveFilters(): boolean {
+    return !!this.selectedCategoryId || !!this.selectedTagId;
   }
 }

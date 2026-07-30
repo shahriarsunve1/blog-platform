@@ -88,10 +88,12 @@ public class PostRepository : GenericRepository<Post>, IPostRepository
     {
     }
 
-    public async Task<List<Post>> GetPublishedPostsAsync(int pageNumber, int pageSize)
+    public async Task<List<Post>> GetPublishedPostsAsync(int pageNumber, int pageSize, Guid? categoryId = null, Guid? tagId = null)
     {
         return await _context.Posts
             .Where(p => p.Status == PostStatus.Published)
+            .Where(p => categoryId == null || p.Categories.Any(c => c.Id == categoryId))
+            .Where(p => tagId == null || p.Tags.Any(t => t.Id == tagId))
             .Include(p => p.Author)
             .Include(p => p.Categories)
             .Include(p => p.Tags)
@@ -121,9 +123,13 @@ public class PostRepository : GenericRepository<Post>, IPostRepository
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
-    public async Task<int> GetPublishedPostsCountAsync()
+    public async Task<int> GetPublishedPostsCountAsync(Guid? categoryId = null, Guid? tagId = null)
     {
-        return await _context.Posts.CountAsync(p => p.Status == PostStatus.Published);
+        return await _context.Posts
+            .Where(p => p.Status == PostStatus.Published)
+            .Where(p => categoryId == null || p.Categories.Any(c => c.Id == categoryId))
+            .Where(p => tagId == null || p.Tags.Any(t => t.Id == tagId))
+            .CountAsync();
     }
 }
 
