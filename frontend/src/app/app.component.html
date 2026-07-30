@@ -1,0 +1,24 @@
+<header class="app-header">
+  <nav class="app-nav">
+    <a routerLink="/posts" class="brand">Blog Platform</a>
+
+    <div class="nav-links">
+      <a routerLink="/posts" routerLinkActive="active">Posts</a>
+
+      <ng-container *ngIf="authService.currentUser$ | async as user; else guestLinks">
+        <a routerLink="/posts/create" routerLinkActive="active">New Post</a>
+        <span class="nav-user">{{ user.firstName || user.email }}</span>
+        <button class="btn-link" (click)="logout()">Logout</button>
+      </ng-container>
+
+      <ng-template #guestLinks>
+        <a routerLink="/auth/login" routerLinkActive="active">Login</a>
+        <a routerLink="/auth/register" routerLinkActive="active">Register</a>
+      </ng-template>
+    </div>
+  </nav>
+</header>
+
+<main>
+  <router-outlet></router-outlet>
+</main>

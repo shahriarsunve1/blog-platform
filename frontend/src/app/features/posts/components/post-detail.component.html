@@ -1,0 +1,39 @@
+<div class="post-detail-container" *ngIf="!isLoading && post">
+  <div class="post-header">
+    <button class="btn btn-outline-secondary" (click)="goBack()">← Back</button>
+    
+    <div class="post-actions" *ngIf="isAuthor">
+      <button class="btn btn-primary" (click)="editPost()">Edit</button>
+      <button class="btn btn-danger" (click)="deletePost()">Delete</button>
+    </div>
+  </div>
+
+  <article class="post-content">
+    <h1>{{ post.title }}</h1>
+    
+    <div class="post-meta">
+      <span class="author" *ngIf="post.author">
+        By {{ post.author.firstName }} {{ post.author.lastName }}
+      </span>
+      <span class="date">{{ post.publishedAt | date: 'long' }}</span>
+      <span class="status" [class]="'status-' + post.status.toLowerCase()">
+        {{ post.status }}
+      </span>
+    </div>
+
+    <p class="excerpt">{{ post.excerpt }}</p>
+
+    <div class="content-body" [innerHTML]="post.content"></div>
+
+    <div class="post-footer">
+      <span class="view-count">
+        <i class="icon-eye"></i> {{ post.viewCount }} views
+      </span>
+    </div>
+  </article>
+</div>
+
+<div class="loading-spinner" *ngIf="isLoading">
+  <div class="spinner"></div>
+  <p>Loading post...</p>
+</div>

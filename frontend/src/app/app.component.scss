@@ -1,0 +1,60 @@
+.app-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.app-nav {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  .brand {
+    font-size: 20px;
+    font-weight: 700;
+    text-decoration: none;
+    color: white;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-size: 14px;
+
+    a {
+      text-decoration: none;
+      color: rgba(255, 255, 255, 0.85);
+      font-weight: 500;
+
+      &:hover,
+      &.active {
+        color: white;
+      }
+    }
+
+    .nav-user {
+      color: white;
+      font-weight: 600;
+    }
+
+    .btn-link {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      font-weight: 500;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0;
+
+      &:hover {
+        color: white;
+      }
+    }
+  }
+}

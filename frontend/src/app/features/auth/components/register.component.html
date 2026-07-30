@@ -1,0 +1,110 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <h2>Register</h2>
+    
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="firstName">First Name</label>
+            <input 
+              id="firstName"
+              type="text" 
+              formControlName="firstName"
+              class="form-control"
+              [class.is-invalid]="isFieldInvalid('firstName')"
+              placeholder="John"
+            />
+            <div class="invalid-feedback" *ngIf="isFieldInvalid('firstName')">
+              First name is required
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="lastName">Last Name</label>
+            <input 
+              id="lastName"
+              type="text" 
+              formControlName="lastName"
+              class="form-control"
+              [class.is-invalid]="isFieldInvalid('lastName')"
+              placeholder="Doe"
+            />
+            <div class="invalid-feedback" *ngIf="isFieldInvalid('lastName')">
+              Last name is required
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input 
+          id="email"
+          type="email" 
+          formControlName="email"
+          class="form-control"
+          [class.is-invalid]="isFieldInvalid('email')"
+          placeholder="user@example.com"
+        />
+        <div class="invalid-feedback" *ngIf="isFieldInvalid('email')">
+          <span *ngIf="form.get('email')?.errors?.['required']">Email is required</span>
+          <span *ngIf="form.get('email')?.errors?.['email']">Invalid email format</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input 
+          id="password"
+          type="password" 
+          formControlName="password"
+          class="form-control"
+          [class.is-invalid]="isFieldInvalid('password')"
+          placeholder="••••••••"
+        />
+        <div class="invalid-feedback" *ngIf="isFieldInvalid('password')">
+          <span *ngIf="form.get('password')?.errors?.['required']">Password is required</span>
+          <span *ngIf="form.get('password')?.errors?.['minlength']">Password must be at least 6 characters</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <input 
+          id="confirmPassword"
+          type="password" 
+          formControlName="confirmPassword"
+          class="form-control"
+          [class.is-invalid]="isFieldInvalid('confirmPassword') || form.errors?.['passwordMismatch']"
+          placeholder="••••••••"
+        />
+        <div class="invalid-feedback" *ngIf="isFieldInvalid('confirmPassword') || form.errors?.['passwordMismatch']">
+          Passwords do not match
+        </div>
+      </div>
+
+      <div class="alert alert-danger" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <button 
+        type="submit" 
+        class="btn btn-primary btn-block"
+        [disabled]="form.invalid || isLoading"
+      >
+        <span *ngIf="!isLoading">Register</span>
+        <span *ngIf="isLoading">
+          <span class="spinner-border spinner-border-sm me-2"></span>
+          Registering...
+        </span>
+      </button>
+    </form>
+
+    <div class="auth-toggle mt-3 text-center">
+      <p>Already have an account? <a routerLink="/auth/login">Login</a></p>
+    </div>
+  </div>
+</div>

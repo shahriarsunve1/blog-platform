@@ -1,0 +1,60 @@
+<div class="posts-container">
+  <div class="posts-header">
+    <h1>Blog Posts</h1>
+    <button class="btn btn-primary" (click)="createPost()">
+      <span>+ New Post</span>
+    </button>
+  </div>
+
+  <div class="loading-spinner" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading posts...</p>
+  </div>
+
+  <div class="posts-grid" *ngIf="!isLoading && posts.length > 0">
+    <app-post-card 
+      *ngFor="let post of posts" 
+      [post]="post"
+      (click)="viewPost(post.id)"
+      class="post-card-wrapper"
+    ></app-post-card>
+  </div>
+
+  <div class="no-posts" *ngIf="!isLoading && posts.length === 0">
+    <h3>No posts found</h3>
+    <p>Start by creating your first blog post!</p>
+  </div>
+
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button 
+      class="btn btn-outline-primary" 
+      (click)="previousPage()"
+      [disabled]="currentPage === 1"
+    >
+      ← Previous
+    </button>
+
+    <div class="page-numbers">
+      <button
+        *ngFor="let page of pagesArray"
+        class="btn btn-outline-secondary"
+        [class.active]="page === currentPage"
+        (click)="goToPage(page)"
+      >
+        {{ page }}
+      </button>
+    </div>
+
+    <button 
+      class="btn btn-outline-primary" 
+      (click)="nextPage()"
+      [disabled]="currentPage === totalPages"
+    >
+      Next →
+    </button>
+  </div>
+
+  <div class="pagination-info" *ngIf="totalPages > 0">
+    <p>Page {{ currentPage }} of {{ totalPages }} ({{ totalCount }} posts total)</p>
+  </div>
+</div>

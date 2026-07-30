@@ -1,0 +1,22 @@
+# .NET
+backend/**/bin/
+backend/**/obj/
+*.user
+
+# Angular / Node
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+npm-debug.log*
+
+# Secrets - never commit real connection strings/keys
+**/appsettings.*.local.json
+
+# Claude Code local settings
+.claude/
+
+# OS/editor
+.vs/
+.vscode/*
+!.vscode/extensions.json
+*.log

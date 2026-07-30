@@ -1,0 +1,28 @@
+<div class="post-card" (click)="onClick()">
+  <div class="post-card-header">
+    <h3>{{ post.title }}</h3>
+    <span class="badge" [class]="'badge-' + post.status.toLowerCase()">
+      {{ post.status }}
+    </span>
+  </div>
+
+  <p class="post-excerpt">{{ post.excerpt }}</p>
+
+  <div class="post-card-footer">
+    <div class="post-meta">
+      <span class="author" *ngIf="post.author">
+        {{ post.author.firstName }} {{ post.author.lastName }}
+      </span>
+      <span class="date">{{ post.publishedAt | date: 'short' }}</span>
+    </div>
+    <div class="post-stats">
+      <span class="views">
+        <i class="icon-eye"></i> {{ post.viewCount }}
+      </span>
+    </div>
+  </div>
+
+  <div class="card-hover-action">
+    Read More →
+  </div>
+</div>
