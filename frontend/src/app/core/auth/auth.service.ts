@@ -46,6 +46,7 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    localStorage.removeItem('currentUser');
     this.currentUserSubject.next(null);
   }
 
@@ -68,7 +69,7 @@ export class AuthService {
    */
   private loadStoredUser(): void {
     const storedUser = localStorage.getItem('currentUser');
-    if (storedUser) {
+    if (storedUser && this.isLoggedIn()) {
       this.currentUserSubject.next(JSON.parse(storedUser));
     }
   }
