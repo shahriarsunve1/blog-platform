@@ -6,9 +6,11 @@ using BlogAPI.API.Middleware;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using FluentValidation;
 using System.Text;
+using System.Threading.RateLimiting;
 
 namespace BlogAPI.API;
 
@@ -90,6 +92,55 @@ public class Startup
             });
         });
 
+        // Rate limiting - throttles brute-force-prone (login/register) and
+        // cost-heavy (comments, media uploads) endpoints.
+        services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.OnRejected = async (context, cancellationToken) =>
+            {
+                context.HttpContext.Response.ContentType = "application/json";
+                await context.HttpContext.Response.WriteAsJsonAsync(new
+                {
+                    success = false,
+                    message = "Too many requests. Please try again shortly.",
+                    statusCode = StatusCodes.Status429TooManyRequests
+                }, cancellationToken);
+            };
+
+            options.AddPolicy("auth", httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        Window = TimeSpan.FromMinutes(1),
+                        PermitLimit = 5,
+                        QueueLimit = 0
+                    }));
+
+            options.AddPolicy("comments", httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: httpContext.User.FindFirst("id")?.Value
+                        ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        Window = TimeSpan.FromMinutes(1),
+                        PermitLimit = 10,
+                        QueueLimit = 0
+                    }));
+
+            options.AddPolicy("media", httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: httpContext.User.FindFirst("id")?.Value
+                        ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        Window = TimeSpan.FromMinutes(10),
+                        PermitLimit = 20,
+                        QueueLimit = 0
+                    }));
+        });
+
         // Controllers
         services.AddControllers();
 
@@ -130,6 +181,7 @@ public class Startup
 
         app.UseAuthentication();
         app.UseAuthorization();
+        app.UseRateLimiter();
 
         app.UseEndpoints(endpoints =>
         {

@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
+using System.Text;
+using System.Xml.Linq;
 using BlogAPI.Core.Services;
 using BlogAPI.Core.DTOs;
 using BlogAPI.Domain.Exceptions;
@@ -32,6 +35,7 @@ public class AuthController : ControllerBase
     /// <summary>
     /// Register a new user
     /// </summary>
+    [EnableRateLimiting("auth")]
     [HttpPost("register")]
     public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Register(RegisterUserDto request)
     {
@@ -51,6 +55,7 @@ public class AuthController : ControllerBase
     /// <summary>
     /// Login user
     /// </summary>
+    [EnableRateLimiting("auth")]
     [HttpPost("login")]
     public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Login(LoginUserDto request)
     {
@@ -105,17 +110,20 @@ public class PostsController : ControllerBase
     private readonly ILikeService _likeService;
     private readonly IValidator<CreatePostDto> _createValidator;
     private readonly IValidator<UpdatePostDto> _updateValidator;
+    private readonly IConfiguration _configuration;
 
     public PostsController(
         IPostService postService,
         ILikeService likeService,
         IValidator<CreatePostDto> createValidator,
-        IValidator<UpdatePostDto> updateValidator)
+        IValidator<UpdatePostDto> updateValidator,
+        IConfiguration configuration)
     {
         _postService = postService;
         _likeService = likeService;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
+        _configuration = configuration;
     }
 
     /// <summary>
@@ -140,6 +148,40 @@ public class PostsController : ControllerBase
     {
         var result = await _postService.GetPublishedPostsAsync(pageNumber, pageSize, categoryId, tagId, search, CurrentUserId, authorId);
         return Ok(ApiResponse<PaginatedResponse<PostDto>>.Ok(result));
+    }
+
+    /// <summary>
+    /// RSS 2.0 feed of the most recent published posts
+    /// </summary>
+    [HttpGet("feed.xml")]
+    public async Task<IActionResult> Feed()
+    {
+        var result = await _postService.GetPublishedPostsAsync(1, 20);
+        var baseUrl = (_configuration["Frontend:BaseUrl"] ?? "").TrimEnd('/');
+
+        var channel = new XElement("channel",
+            new XElement("title", "Resonate"),
+            new XElement("link", baseUrl),
+            new XElement("description", "Recent posts from Resonate"),
+            new XElement("language", "en-us"),
+            result.Items.Select(post =>
+            {
+                var postUrl = $"{baseUrl}/posts/{post.Id}";
+                return new XElement("item",
+                    new XElement("title", post.Title),
+                    new XElement("link", postUrl),
+                    new XElement("guid", new XAttribute("isPermaLink", "true"), postUrl),
+                    new XElement("description", post.Excerpt),
+                    new XElement("pubDate", (post.PublishedAt ?? post.CreatedAt).ToString("R")),
+                    post.Author != null ? new XElement("author", $"{post.Author.FirstName} {post.Author.LastName}".Trim()) : null
+                );
+            }));
+
+        var doc = new XDocument(
+            new XDeclaration("1.0", "utf-8", null),
+            new XElement("rss", new XAttribute("version", "2.0"), channel));
+
+        return Content(doc.Declaration + Environment.NewLine + doc.ToString(), "application/rss+xml", Encoding.UTF8);
     }
 
     /// <summary>

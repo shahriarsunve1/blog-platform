@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using FluentValidation;
 using BlogAPI.Core.Services;
 using BlogAPI.Core.DTOs;
@@ -33,6 +34,7 @@ public class CommentsController : ControllerBase
     /// Add a comment to a post (authenticated)
     /// </summary>
     [Authorize]
+    [EnableRateLimiting("comments")]
     [HttpPost("api/posts/{postId}/comments")]
     public async Task<ActionResult<ApiResponse<CommentDto>>> Create(Guid postId, CreateCommentDto request)
     {

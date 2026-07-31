@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using BlogAPI.Core.Services;
 using BlogAPI.Core.DTOs;
 
@@ -20,6 +21,7 @@ public class MediaController : ControllerBase
     /// Upload an image to embed in post content (authenticated)
     /// </summary>
     [Authorize]
+    [EnableRateLimiting("media")]
     [HttpPost]
     [RequestSizeLimit(5 * 1024 * 1024)]
     public async Task<ActionResult<ApiResponse<MediaFileDto>>> Upload(IFormFile file)
