@@ -20,9 +20,10 @@ public class CategoriesController : ControllerBase
     }
 
     /// <summary>
-    /// Get all categories
+    /// Get all categories. Cached briefly - this list changes rarely.
     /// </summary>
     [HttpGet]
+    [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
     public async Task<ActionResult<ApiResponse<List<CategoryDto>>>> GetAll()
     {
         var result = await _categoryService.GetAllAsync();
@@ -64,9 +65,10 @@ public class TagsController : ControllerBase
     }
 
     /// <summary>
-    /// Get all tags
+    /// Get all tags. Cached briefly - this list changes rarely.
     /// </summary>
     [HttpGet]
+    [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
     public async Task<ActionResult<ApiResponse<List<TagDto>>>> GetAll()
     {
         var result = await _tagService.GetAllAsync();

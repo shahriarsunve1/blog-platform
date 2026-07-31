@@ -18,6 +18,7 @@ public class BlogContext : DbContext
     public DbSet<Tag> Tags { get; set; }
     public DbSet<Comment> Comments { get; set; }
     public DbSet<Like> Likes { get; set; }
+    public DbSet<Follow> Follows { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -97,6 +98,23 @@ public class BlogContext : DbContext
             .WithMany()
             .HasForeignKey(l => l.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Follow configuration
+        modelBuilder.Entity<Follow>()
+            .HasKey(f => f.Id);
+        modelBuilder.Entity<Follow>()
+            .HasIndex(f => new { f.FollowerId, f.FollowingId })
+            .IsUnique();
+        modelBuilder.Entity<Follow>()
+            .HasOne(f => f.FollowerUser)
+            .WithMany()
+            .HasForeignKey(f => f.FollowerId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<Follow>()
+            .HasOne(f => f.FollowingUser)
+            .WithMany()
+            .HasForeignKey(f => f.FollowingId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         // Starter categories/tags so posts have something to attach to out of the box
         modelBuilder.Entity<Category>().HasData(

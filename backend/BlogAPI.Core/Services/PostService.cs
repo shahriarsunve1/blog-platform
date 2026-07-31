@@ -28,10 +28,10 @@ public class PostService : IPostService
         _tagRepository = tagRepository;
     }
 
-    public async Task<PaginatedResponse<PostDto>> GetPublishedPostsAsync(int pageNumber = 1, int pageSize = 10, Guid? categoryId = null, Guid? tagId = null, string? search = null, Guid? currentUserId = null)
+    public async Task<PaginatedResponse<PostDto>> GetPublishedPostsAsync(int pageNumber = 1, int pageSize = 10, Guid? categoryId = null, Guid? tagId = null, string? search = null, Guid? currentUserId = null, Guid? authorId = null)
     {
-        var posts = await _postRepository.GetPublishedPostsAsync(pageNumber, pageSize, categoryId, tagId, search);
-        var totalCount = await _postRepository.GetPublishedPostsCountAsync(categoryId, tagId, search);
+        var posts = await _postRepository.GetPublishedPostsAsync(pageNumber, pageSize, categoryId, tagId, search, authorId);
+        var totalCount = await _postRepository.GetPublishedPostsCountAsync(categoryId, tagId, search, authorId);
 
         return new PaginatedResponse<PostDto>
         {

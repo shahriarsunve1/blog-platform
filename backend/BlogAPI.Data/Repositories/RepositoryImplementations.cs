@@ -88,7 +88,7 @@ public class PostRepository : GenericRepository<Post>, IPostRepository
     {
     }
 
-    public async Task<List<Post>> GetPublishedPostsAsync(int pageNumber, int pageSize, Guid? categoryId = null, Guid? tagId = null, string? search = null)
+    public async Task<List<Post>> GetPublishedPostsAsync(int pageNumber, int pageSize, Guid? categoryId = null, Guid? tagId = null, string? search = null, Guid? authorId = null)
     {
         var normalizedSearch = string.IsNullOrWhiteSpace(search) ? null : search.Trim().ToLower();
 
@@ -96,6 +96,7 @@ public class PostRepository : GenericRepository<Post>, IPostRepository
             .Where(p => p.Status == PostStatus.Published)
             .Where(p => categoryId == null || p.Categories.Any(c => c.Id == categoryId))
             .Where(p => tagId == null || p.Tags.Any(t => t.Id == tagId))
+            .Where(p => authorId == null || p.UserId == authorId)
             .Where(p => normalizedSearch == null
                 || p.Title.ToLower().Contains(normalizedSearch)
                 || p.Excerpt.ToLower().Contains(normalizedSearch)
@@ -132,7 +133,7 @@ public class PostRepository : GenericRepository<Post>, IPostRepository
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
-    public async Task<int> GetPublishedPostsCountAsync(Guid? categoryId = null, Guid? tagId = null, string? search = null)
+    public async Task<int> GetPublishedPostsCountAsync(Guid? categoryId = null, Guid? tagId = null, string? search = null, Guid? authorId = null)
     {
         var normalizedSearch = string.IsNullOrWhiteSpace(search) ? null : search.Trim().ToLower();
 
@@ -140,6 +141,7 @@ public class PostRepository : GenericRepository<Post>, IPostRepository
             .Where(p => p.Status == PostStatus.Published)
             .Where(p => categoryId == null || p.Categories.Any(c => c.Id == categoryId))
             .Where(p => tagId == null || p.Tags.Any(t => t.Id == tagId))
+            .Where(p => authorId == null || p.UserId == authorId)
             .Where(p => normalizedSearch == null
                 || p.Title.ToLower().Contains(normalizedSearch)
                 || p.Excerpt.ToLower().Contains(normalizedSearch)
@@ -209,5 +211,25 @@ public class LikeRepository : GenericRepository<Like>, ILikeRepository
     public async Task<Like?> GetByPostAndUserAsync(Guid postId, Guid userId)
     {
         return await _context.Likes.FirstOrDefaultAsync(l => l.PostId == postId && l.UserId == userId);
+    }
+}
+
+/// <summary>
+/// Follow repository implementation
+/// </summary>
+public class FollowRepository : GenericRepository<Follow>, IFollowRepository
+{
+    public FollowRepository(BlogContext context) : base(context)
+    {
+    }
+
+    public async Task<Follow?> GetAsync(Guid followerId, Guid followingId)
+    {
+        return await _context.Follows.FirstOrDefaultAsync(f => f.FollowerId == followerId && f.FollowingId == followingId);
+    }
+
+    public async Task<int> GetFollowerCountAsync(Guid userId)
+    {
+        return await _context.Follows.CountAsync(f => f.FollowingId == userId);
     }
 }

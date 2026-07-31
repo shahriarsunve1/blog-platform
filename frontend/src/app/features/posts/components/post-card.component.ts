@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { Post } from '../../../shared/models/models';
 
 @Component({
@@ -7,7 +8,7 @@ import { Post } from '../../../shared/models/models';
   templateUrl: './post-card.component.html',
   styleUrls: ['./posts.scss'],
   standalone: true,
-  imports: [CommonModule]
+  imports: [CommonModule, RouterModule]
 })
 export class PostCardComponent {
   @Input() post!: Post;

@@ -34,25 +34,38 @@ public class PostServiceTests
     {
         var categoryId = Guid.NewGuid();
         var tagId = Guid.NewGuid();
-        _postRepository.Setup(r => r.GetPublishedPostsAsync(1, 10, categoryId, tagId, null)).ReturnsAsync(new List<Post>());
-        _postRepository.Setup(r => r.GetPublishedPostsCountAsync(categoryId, tagId, null)).ReturnsAsync(0);
+        _postRepository.Setup(r => r.GetPublishedPostsAsync(1, 10, categoryId, tagId, null, null)).ReturnsAsync(new List<Post>());
+        _postRepository.Setup(r => r.GetPublishedPostsCountAsync(categoryId, tagId, null, null)).ReturnsAsync(0);
 
         await _sut.GetPublishedPostsAsync(1, 10, categoryId, tagId);
 
-        _postRepository.Verify(r => r.GetPublishedPostsAsync(1, 10, categoryId, tagId, null), Times.Once);
-        _postRepository.Verify(r => r.GetPublishedPostsCountAsync(categoryId, tagId, null), Times.Once);
+        _postRepository.Verify(r => r.GetPublishedPostsAsync(1, 10, categoryId, tagId, null, null), Times.Once);
+        _postRepository.Verify(r => r.GetPublishedPostsCountAsync(categoryId, tagId, null, null), Times.Once);
     }
 
     [Fact]
     public async Task GetPublishedPostsAsync_PassesSearchTermThrough()
     {
-        _postRepository.Setup(r => r.GetPublishedPostsAsync(1, 10, null, null, "angular")).ReturnsAsync(new List<Post>());
-        _postRepository.Setup(r => r.GetPublishedPostsCountAsync(null, null, "angular")).ReturnsAsync(0);
+        _postRepository.Setup(r => r.GetPublishedPostsAsync(1, 10, null, null, "angular", null)).ReturnsAsync(new List<Post>());
+        _postRepository.Setup(r => r.GetPublishedPostsCountAsync(null, null, "angular", null)).ReturnsAsync(0);
 
         await _sut.GetPublishedPostsAsync(1, 10, search: "angular");
 
-        _postRepository.Verify(r => r.GetPublishedPostsAsync(1, 10, null, null, "angular"), Times.Once);
-        _postRepository.Verify(r => r.GetPublishedPostsCountAsync(null, null, "angular"), Times.Once);
+        _postRepository.Verify(r => r.GetPublishedPostsAsync(1, 10, null, null, "angular", null), Times.Once);
+        _postRepository.Verify(r => r.GetPublishedPostsCountAsync(null, null, "angular", null), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetPublishedPostsAsync_PassesAuthorIdThrough()
+    {
+        var authorId = Guid.NewGuid();
+        _postRepository.Setup(r => r.GetPublishedPostsAsync(1, 10, null, null, null, authorId)).ReturnsAsync(new List<Post>());
+        _postRepository.Setup(r => r.GetPublishedPostsCountAsync(null, null, null, authorId)).ReturnsAsync(0);
+
+        await _sut.GetPublishedPostsAsync(1, 10, authorId: authorId);
+
+        _postRepository.Verify(r => r.GetPublishedPostsAsync(1, 10, null, null, null, authorId), Times.Once);
+        _postRepository.Verify(r => r.GetPublishedPostsCountAsync(null, null, null, authorId), Times.Once);
     }
 
     [Fact]

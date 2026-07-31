@@ -135,9 +135,10 @@ public class PostsController : ControllerBase
         [FromQuery] int pageSize = 10,
         [FromQuery] Guid? categoryId = null,
         [FromQuery] Guid? tagId = null,
-        [FromQuery] string? search = null)
+        [FromQuery] string? search = null,
+        [FromQuery] Guid? authorId = null)
     {
-        var result = await _postService.GetPublishedPostsAsync(pageNumber, pageSize, categoryId, tagId, search, CurrentUserId);
+        var result = await _postService.GetPublishedPostsAsync(pageNumber, pageSize, categoryId, tagId, search, CurrentUserId, authorId);
         return Ok(ApiResponse<PaginatedResponse<PostDto>>.Ok(result));
     }
 
@@ -281,11 +282,19 @@ public class PostsController : ControllerBase
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IFollowService _followService;
 
-    public UsersController(IUserService userService)
+    public UsersController(IUserService userService, IFollowService followService)
     {
         _userService = userService;
+        _followService = followService;
     }
+
+    /// <summary>
+    /// The requesting user's id if authenticated, otherwise null.
+    /// </summary>
+    private Guid? CurrentUserId =>
+        Guid.TryParse(User.FindFirst("id")?.Value, out var id) ? id : null;
 
     /// <summary>
     /// Get user profile by ID
@@ -295,12 +304,45 @@ public class UsersController : ControllerBase
     {
         try
         {
-            var result = await _userService.GetUserByIdAsync(id);
+            var result = await _userService.GetUserByIdAsync(id, CurrentUserId);
             return Ok(ApiResponse<UserDto>.Ok(result));
         }
         catch (EntityNotFoundException ex)
         {
             return NotFound(ApiResponse<UserDto>.Fail(ex.Message, 404));
         }
+    }
+
+    /// <summary>
+    /// Follow a user (idempotent)
+    /// </summary>
+    [Authorize]
+    [HttpPost("{id}/follow")]
+    public async Task<ActionResult<ApiResponse<int>>> Follow(Guid id)
+    {
+        try
+        {
+            var followerCount = await _followService.FollowAsync(CurrentUserId!.Value, id);
+            return Ok(ApiResponse<int>.Ok(followerCount, "Followed"));
+        }
+        catch (EntityNotFoundException ex)
+        {
+            return NotFound(ApiResponse<int>.Fail(ex.Message, 404));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse<int>.Fail(ex.Message, 400));
+        }
+    }
+
+    /// <summary>
+    /// Unfollow a user (idempotent)
+    /// </summary>
+    [Authorize]
+    [HttpDelete("{id}/follow")]
+    public async Task<ActionResult<ApiResponse<int>>> Unfollow(Guid id)
+    {
+        var followerCount = await _followService.UnfollowAsync(CurrentUserId!.Value, id);
+        return Ok(ApiResponse<int>.Ok(followerCount, "Unfollowed"));
     }
 }

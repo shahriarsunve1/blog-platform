@@ -1,0 +1,43 @@
+<div class="author-profile" *ngIf="!isLoading && author">
+  <div class="author-header">
+    <div class="author-info">
+      <h1>{{ author.firstName }} {{ author.lastName }}</h1>
+      <p class="author-bio" *ngIf="author.bio">{{ author.bio }}</p>
+      <p class="follower-count">{{ author.followerCount ?? 0 }} follower{{ (author.followerCount ?? 0) === 1 ? '' : 's' }}</p>
+    </div>
+
+    <button
+      class="follow-btn"
+      *ngIf="currentUserId && !isOwnProfile"
+      [class.following]="author.isFollowedByCurrentUser"
+      [disabled]="isTogglingFollow"
+      (click)="toggleFollow()"
+    >
+      {{ author.isFollowedByCurrentUser ? 'Following' : 'Follow' }}
+    </button>
+  </div>
+
+  <h2 class="posts-heading">Posts</h2>
+
+  <div class="loading-spinner" *ngIf="postsLoading">
+    <div class="spinner"></div>
+  </div>
+
+  <div class="posts-grid" *ngIf="!postsLoading && posts.length > 0">
+    <app-post-card
+      *ngFor="let post of posts"
+      [post]="post"
+      (click)="viewPost(post.id)"
+      class="post-card-wrapper"
+    ></app-post-card>
+  </div>
+
+  <div class="no-posts" *ngIf="!postsLoading && posts.length === 0">
+    <p>No published posts yet.</p>
+  </div>
+</div>
+
+<div class="loading-spinner" *ngIf="isLoading">
+  <div class="spinner"></div>
+  <p>Loading profile...</p>
+</div>

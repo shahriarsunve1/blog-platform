@@ -27,6 +27,8 @@ export class PostDetailComponent implements OnInit {
   isPostingComment = false;
   commentError = '';
 
+  linkCopied = false;
+
   constructor(
     private postService: PostService,
     private commentService: CommentService,
@@ -104,6 +106,33 @@ export class PostDetailComponent implements OnInit {
           this.post.likeCount += wasLiked ? 1 : -1;
         }
       }
+    });
+  }
+
+  get shareUrl(): string {
+    return window.location.href;
+  }
+
+  shareOnTwitter(): void {
+    if (!this.post) return;
+    const url = `https://twitter.com/intent/tweet?url=${encodeURIComponent(this.shareUrl)}&text=${encodeURIComponent(this.post.title)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
+  shareOnFacebook(): void {
+    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(this.shareUrl)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
+  shareOnLinkedIn(): void {
+    const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(this.shareUrl)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
+  copyLink(): void {
+    navigator.clipboard.writeText(this.shareUrl).then(() => {
+      this.linkCopied = true;
+      setTimeout(() => (this.linkCopied = false), 2000);
     });
   }
 

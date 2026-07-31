@@ -15,9 +15,14 @@
 
   <div class="post-card-footer">
     <div class="post-meta">
-      <span class="author" *ngIf="post.author">
+      <a
+        class="author"
+        *ngIf="post.author"
+        [routerLink]="['/authors', post.author.id]"
+        (click)="$event.stopPropagation()"
+      >
         {{ post.author.firstName }} {{ post.author.lastName }}
-      </span>
+      </a>
       <span class="date">{{ post.publishedAt | date: 'short' }}</span>
     </div>
     <div class="post-stats">

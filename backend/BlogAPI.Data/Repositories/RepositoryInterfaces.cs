@@ -30,10 +30,10 @@ public interface IUserRepository : IGenericRepository<User>
 /// </summary>
 public interface IPostRepository : IGenericRepository<Post>
 {
-    Task<List<Post>> GetPublishedPostsAsync(int pageNumber, int pageSize, Guid? categoryId = null, Guid? tagId = null, string? search = null);
+    Task<List<Post>> GetPublishedPostsAsync(int pageNumber, int pageSize, Guid? categoryId = null, Guid? tagId = null, string? search = null, Guid? authorId = null);
     Task<List<Post>> GetUserPostsAsync(Guid userId);
     Task<Post?> GetPostWithDetailsAsync(Guid id);
-    Task<int> GetPublishedPostsCountAsync(Guid? categoryId = null, Guid? tagId = null, string? search = null);
+    Task<int> GetPublishedPostsCountAsync(Guid? categoryId = null, Guid? tagId = null, string? search = null, Guid? authorId = null);
 }
 
 /// <summary>
@@ -66,4 +66,13 @@ public interface ICommentRepository : IGenericRepository<Comment>
 public interface ILikeRepository : IGenericRepository<Like>
 {
     Task<Like?> GetByPostAndUserAsync(Guid postId, Guid userId);
+}
+
+/// <summary>
+/// Follow repository interface
+/// </summary>
+public interface IFollowRepository : IGenericRepository<Follow>
+{
+    Task<Follow?> GetAsync(Guid followerId, Guid followingId);
+    Task<int> GetFollowerCountAsync(Guid userId);
 }

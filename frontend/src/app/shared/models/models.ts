@@ -11,6 +11,8 @@ export interface User {
   avatar: string;
   role: string;
   createdAt: string;
+  followerCount?: number;
+  isFollowedByCurrentUser?: boolean;
 }
 
 export interface RegisterRequest {

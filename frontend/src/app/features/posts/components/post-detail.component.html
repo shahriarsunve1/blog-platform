@@ -13,7 +13,7 @@
     
     <div class="post-meta">
       <span class="author" *ngIf="post.author">
-        By {{ post.author.firstName }} {{ post.author.lastName }}
+        By <a [routerLink]="['/authors', post.author.id]">{{ post.author.firstName }} {{ post.author.lastName }}</a>
       </span>
       <span class="date">{{ post.publishedAt | date: 'long' }}</span>
       <span class="status" [class]="'status-' + post.status.toLowerCase()">
@@ -44,6 +44,16 @@
       <span class="view-count">
         <i class="icon-eye"></i> {{ post.viewCount }} views
       </span>
+
+      <div class="share-row">
+        <span class="share-label">Share:</span>
+        <button class="share-btn" title="Share on X/Twitter" (click)="shareOnTwitter()">𝕏</button>
+        <button class="share-btn" title="Share on Facebook" (click)="shareOnFacebook()">f</button>
+        <button class="share-btn" title="Share on LinkedIn" (click)="shareOnLinkedIn()">in</button>
+        <button class="share-btn" title="Copy link" (click)="copyLink()">
+          {{ linkCopied ? 'Copied!' : '🔗' }}
+        </button>
+      </div>
     </div>
   </article>
 

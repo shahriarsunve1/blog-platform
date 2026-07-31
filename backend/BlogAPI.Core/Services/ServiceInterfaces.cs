@@ -22,7 +22,7 @@ public interface IPostService
 {
     Task<PostDto> CreatePostAsync(Guid userId, CreatePostDto dto);
     Task<PostDto> GetPostByIdAsync(Guid postId, Guid? currentUserId = null);
-    Task<PaginatedResponse<PostDto>> GetPublishedPostsAsync(int pageNumber = 1, int pageSize = 10, Guid? categoryId = null, Guid? tagId = null, string? search = null, Guid? currentUserId = null);
+    Task<PaginatedResponse<PostDto>> GetPublishedPostsAsync(int pageNumber = 1, int pageSize = 10, Guid? categoryId = null, Guid? tagId = null, string? search = null, Guid? currentUserId = null, Guid? authorId = null);
     Task<List<PostDto>> GetUserPostsAsync(Guid userId);
     Task<PostDto> UpdatePostAsync(Guid postId, UpdatePostDto dto, Guid userId);
     Task DeletePostAsync(Guid postId, Guid userId);
@@ -33,7 +33,7 @@ public interface IPostService
 /// </summary>
 public interface IUserService
 {
-    Task<UserDto> GetUserByIdAsync(Guid userId);
+    Task<UserDto> GetUserByIdAsync(Guid userId, Guid? currentUserId = null);
     Task<UserDto> GetUserByEmailAsync(string email);
     Task<bool> UserExistsAsync(string email);
 }
@@ -73,4 +73,13 @@ public interface ILikeService
 {
     Task<int> LikeAsync(Guid postId, Guid userId);
     Task<int> UnlikeAsync(Guid postId, Guid userId);
+}
+
+/// <summary>
+/// Interface for follow service
+/// </summary>
+public interface IFollowService
+{
+    Task<int> FollowAsync(Guid followerId, Guid followingId);
+    Task<int> UnfollowAsync(Guid followerId, Guid followingId);
 }

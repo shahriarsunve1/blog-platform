@@ -34,6 +34,7 @@ public class Startup
         services.AddScoped<ITagRepository, TagRepository>();
         services.AddScoped<ICommentRepository, CommentRepository>();
         services.AddScoped<ILikeRepository, LikeRepository>();
+        services.AddScoped<IFollowRepository, FollowRepository>();
 
         // Services
         services.AddScoped<IAuthService, AuthServiceImpl>();
@@ -43,6 +44,7 @@ public class Startup
         services.AddScoped<ITagService, TagService>();
         services.AddScoped<ICommentService, CommentService>();
         services.AddScoped<ILikeService, LikeService>();
+        services.AddScoped<IFollowService, FollowService>();
 
         // Validation
         services.AddValidatorsFromAssemblyContaining<RegisterUserDtoValidator>();
@@ -87,6 +89,9 @@ public class Startup
         // Controllers
         services.AddControllers();
 
+        // Response caching (used for rarely-changing lookups like categories/tags)
+        services.AddResponseCaching();
+
         // Swagger
         services.AddSwaggerGen();
     }
@@ -109,6 +114,7 @@ public class Startup
 
         app.UseRouting();
         app.UseCors("AllowFrontend");
+        app.UseResponseCaching();
 
         app.UseAuthentication();
         app.UseAuthorization();
