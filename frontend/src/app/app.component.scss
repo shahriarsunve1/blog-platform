@@ -18,14 +18,35 @@
     align-items: center;
     text-decoration: none;
 
-    img {
+    .brand-logo {
       display: block;
       height: 34px;
       width: auto;
     }
 
-    .brand-icon {
-      display: none;
+    .brand-logo-leaf {
+      fill: var(--color-accent);
+    }
+
+    .brand-logo-veins line {
+      stroke: var(--color-surface);
+      stroke-width: 2;
+      stroke-linecap: round;
+    }
+
+    .brand-logo-waves path {
+      fill: none;
+      stroke: var(--color-accent);
+      stroke-width: 3;
+      stroke-linecap: round;
+    }
+
+    .brand-logo-text {
+      font-family: var(--font-serif);
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      fill: var(--color-text);
     }
 
     &:hover {
@@ -112,15 +133,8 @@
     display: block;
   }
 
-  .app-nav .brand {
-    .brand-full {
-      display: none;
-    }
-
-    .brand-icon {
-      display: block;
-      height: 30px;
-    }
+  .app-nav .brand .brand-logo {
+    height: 28px;
   }
 
   .app-nav .nav-links {
