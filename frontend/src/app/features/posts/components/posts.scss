@@ -1179,6 +1179,7 @@
     justify-content: space-between;
     align-items: flex-start;
     gap: 8px;
+    flex-shrink: 0;
 
     h3 {
       margin: 0;
@@ -1186,6 +1187,7 @@
       line-height: 1.35;
       color: var(--color-text);
       flex: 1;
+      flex-shrink: 0;
       height: 44px;
       display: -webkit-box;
       -webkit-line-clamp: 2;
@@ -1221,18 +1223,26 @@
   }
 
   .post-excerpt {
-    box-sizing: content-box;
+    // Padding lives here, on the wrapper - NOT on .post-excerpt-clamp below.
+    // Chromium mis-counts -webkit-line-clamp lines when the clamped element
+    // has its own padding (confirmed in isolation, unrelated to box-sizing),
+    // so the clamp has to live on a padding-free inner element instead.
     padding: 8px 18px 12px;
     color: var(--color-text-muted);
     font-size: 12.5px;
     line-height: 1.55;
     margin: 0;
-    height: 55px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
+    height: 79px;
+    flex-shrink: 0;
     overflow: hidden;
+
+    .post-excerpt-clamp {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
   }
 
   .post-tags {
@@ -1240,6 +1250,7 @@
     margin-bottom: 0;
     height: 26px;
     box-sizing: content-box;
+    flex-shrink: 0;
     flex-wrap: nowrap;
     overflow: hidden;
 
@@ -1263,6 +1274,7 @@
     gap: 8px;
     font-size: 11px;
     color: var(--color-text-faint);
+    flex-shrink: 0;
 
     .post-meta {
       display: flex;
