@@ -10,6 +10,7 @@ public class CreatePostDto
     public string Title { get; set; } = string.Empty;
     public string Excerpt { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
+    public string CoverImageUrl { get; set; } = string.Empty;
     public string Status { get; set; } = "Draft";
     public List<Guid> CategoryIds { get; set; } = new();
     public List<Guid> TagIds { get; set; } = new();
@@ -23,6 +24,7 @@ public class UpdatePostDto
     public string Title { get; set; } = string.Empty;
     public string Excerpt { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
+    public string CoverImageUrl { get; set; } = string.Empty;
     public string Status { get; set; } = "Draft";
     public List<Guid> CategoryIds { get; set; } = new();
     public List<Guid> TagIds { get; set; } = new();
@@ -38,6 +40,7 @@ public class PostDto
     public string Title { get; set; } = string.Empty;
     public string Excerpt { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
+    public string CoverImageUrl { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public int ViewCount { get; set; }
     public UserDto? Author { get; set; }

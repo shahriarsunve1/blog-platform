@@ -6,4 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Only for NpgsqlTsVector, the type backing the Post.SearchVector generated column -->
+    <PackageReference Include="Npgsql" Version="7.0.10" />
+  </ItemGroup>
+
 </Project>

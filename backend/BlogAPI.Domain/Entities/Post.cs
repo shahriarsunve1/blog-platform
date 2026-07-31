@@ -1,4 +1,5 @@
 using BlogAPI.Domain.Enums;
+using NpgsqlTypes;
 
 namespace BlogAPI.Domain.Entities;
 
@@ -12,11 +13,16 @@ public class Post
     public string Title { get; set; } = string.Empty;
     public string Excerpt { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
+    public string CoverImageUrl { get; set; } = string.Empty;
     public PostStatus Status { get; set; } = PostStatus.Draft;
     public int ViewCount { get; set; } = 0;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? PublishedAt { get; set; }
+
+    // Postgres-generated column (computed from Title/Excerpt/Content) backing
+    // full-text search - not set by application code, EF/Postgres maintain it.
+    public NpgsqlTsVector SearchVector { get; set; } = null!;
 
     // Navigation properties
     public User? Author { get; set; }

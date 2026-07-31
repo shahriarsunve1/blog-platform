@@ -60,6 +60,17 @@ public class BlogContext : DbContext
         modelBuilder.Entity<Post>()
             .HasMany(p => p.Tags)
             .WithMany(t => t.Posts);
+        // Full-text search over title/excerpt/content, stored as a generated
+        // column (shadow property - not part of the domain model) with a GIN
+        // index so search queries can use ts_rank instead of a substring scan.
+        modelBuilder.Entity<Post>()
+            .HasGeneratedTsVectorColumn(
+                p => p.SearchVector,
+                "english",
+                p => new { p.Title, p.Excerpt, p.Content });
+        modelBuilder.Entity<Post>()
+            .HasIndex(p => p.SearchVector)
+            .HasMethod("GIN");
 
         // Category configuration
         modelBuilder.Entity<Category>()

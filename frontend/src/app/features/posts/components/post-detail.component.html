@@ -9,8 +9,10 @@
   </div>
 
   <article class="post-content">
+    <img class="cover-image" *ngIf="post.coverImageUrl" [src]="post.coverImageUrl" alt="" />
+
     <h1>{{ post.title }}</h1>
-    
+
     <div class="post-meta">
       <span class="author" *ngIf="post.author">
         By <a [routerLink]="['/authors', post.author.id]">{{ post.author.firstName }} {{ post.author.lastName }}</a>

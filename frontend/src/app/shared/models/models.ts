@@ -68,6 +68,7 @@ export interface Post {
   title: string;
   excerpt: string;
   content: string;
+  coverImageUrl: string;
   status: PostStatus;
   viewCount: number;
   author?: User;
@@ -84,6 +85,7 @@ export interface CreatePostDto {
   title: string;
   excerpt: string;
   content: string;
+  coverImageUrl: string;
   status: PostStatus;
   categoryIds: string[];
   tagIds: string[];

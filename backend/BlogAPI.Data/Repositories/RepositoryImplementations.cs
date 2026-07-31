@@ -103,21 +103,30 @@ public class PostRepository : GenericRepository<Post>, IPostRepository
 
     public async Task<List<Post>> GetPublishedPostsAsync(int pageNumber, int pageSize, Guid? categoryId = null, Guid? tagId = null, string? search = null, Guid? authorId = null)
     {
-        var normalizedSearch = string.IsNullOrWhiteSpace(search) ? null : search.Trim().ToLower();
+        var normalizedSearch = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
 
-        return await _context.Posts
+        var query = _context.Posts
             .Where(p => p.Status == PostStatus.Published)
             .Where(p => categoryId == null || p.Categories.Any(c => c.Id == categoryId))
             .Where(p => tagId == null || p.Tags.Any(t => t.Id == tagId))
             .Where(p => authorId == null || p.UserId == authorId)
-            .Where(p => normalizedSearch == null
-                || p.Title.ToLower().Contains(normalizedSearch)
-                || p.Excerpt.ToLower().Contains(normalizedSearch)
-                || p.Content.ToLower().Contains(normalizedSearch))
             .Include(p => p.Author)
             .Include(p => p.Categories)
             .Include(p => p.Tags)
             .Include(p => p.Likes)
+            .AsQueryable();
+
+        if (normalizedSearch != null)
+        {
+            return await query
+                .Where(p => p.SearchVector.Matches(EF.Functions.WebSearchToTsQuery("english", normalizedSearch)))
+                .OrderByDescending(p => p.SearchVector.Rank(EF.Functions.WebSearchToTsQuery("english", normalizedSearch)))
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
+
+        return await query
             .OrderByDescending(p => p.PublishedAt)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
@@ -148,18 +157,20 @@ public class PostRepository : GenericRepository<Post>, IPostRepository
 
     public async Task<int> GetPublishedPostsCountAsync(Guid? categoryId = null, Guid? tagId = null, string? search = null, Guid? authorId = null)
     {
-        var normalizedSearch = string.IsNullOrWhiteSpace(search) ? null : search.Trim().ToLower();
+        var normalizedSearch = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
 
-        return await _context.Posts
+        var query = _context.Posts
             .Where(p => p.Status == PostStatus.Published)
             .Where(p => categoryId == null || p.Categories.Any(c => c.Id == categoryId))
             .Where(p => tagId == null || p.Tags.Any(t => t.Id == tagId))
-            .Where(p => authorId == null || p.UserId == authorId)
-            .Where(p => normalizedSearch == null
-                || p.Title.ToLower().Contains(normalizedSearch)
-                || p.Excerpt.ToLower().Contains(normalizedSearch)
-                || p.Content.ToLower().Contains(normalizedSearch))
-            .CountAsync();
+            .Where(p => authorId == null || p.UserId == authorId);
+
+        if (normalizedSearch != null)
+        {
+            query = query.Where(p => p.SearchVector.Matches(EF.Functions.WebSearchToTsQuery("english", normalizedSearch)));
+        }
+
+        return await query.CountAsync();
     }
 
     public async Task<int> CountByStatusAsync(PostStatus status)

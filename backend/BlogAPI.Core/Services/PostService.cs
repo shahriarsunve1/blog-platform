@@ -131,6 +131,7 @@ public class PostService : IPostService
             Title = request.Title,
             Excerpt = request.Excerpt,
             Content = PostContentSanitizer.Sanitize(request.Content),
+            CoverImageUrl = request.CoverImageUrl,
             Status = status,
             ViewCount = 0,
             CreatedAt = DateTime.UtcNow,
@@ -159,6 +160,7 @@ public class PostService : IPostService
         post.Title = request.Title;
         post.Excerpt = request.Excerpt;
         post.Content = PostContentSanitizer.Sanitize(request.Content);
+        post.CoverImageUrl = request.CoverImageUrl;
         post.Status = Enum.Parse<PostStatus>(request.Status);
         post.UpdatedAt = DateTime.UtcNow;
 
@@ -208,6 +210,7 @@ public class PostService : IPostService
             Title = post.Title,
             Excerpt = post.Excerpt,
             Content = post.Content,
+            CoverImageUrl = post.CoverImageUrl,
             Status = post.Status.ToString(),
             ViewCount = post.ViewCount,
             CreatedAt = post.CreatedAt,
