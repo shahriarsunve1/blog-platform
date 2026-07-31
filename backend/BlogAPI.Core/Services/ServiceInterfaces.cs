@@ -91,3 +91,13 @@ public interface IAdminService
 {
     Task<AdminDashboardDto> GetDashboardAsync();
 }
+
+/// <summary>
+/// Interface for transactional email sending. Implementations must never let a
+/// send failure propagate - notification emails are best-effort and should
+/// never break the user-facing action that triggered them.
+/// </summary>
+public interface IEmailService
+{
+    Task SendEmailAsync(string to, string subject, string htmlBody);
+}

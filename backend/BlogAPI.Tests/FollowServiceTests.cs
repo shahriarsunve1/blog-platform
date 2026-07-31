@@ -2,6 +2,7 @@ using BlogAPI.Core.Services;
 using BlogAPI.Data.Repositories;
 using BlogAPI.Domain.Entities;
 using BlogAPI.Domain.Exceptions;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using Xunit;
 
@@ -11,11 +12,13 @@ public class FollowServiceTests
 {
     private readonly Mock<IFollowRepository> _followRepository = new();
     private readonly Mock<IUserRepository> _userRepository = new();
+    private readonly Mock<IEmailService> _emailService = new();
+    private readonly Mock<IConfiguration> _configuration = new();
     private readonly FollowService _sut;
 
     public FollowServiceTests()
     {
-        _sut = new FollowService(_followRepository.Object, _userRepository.Object);
+        _sut = new FollowService(_followRepository.Object, _userRepository.Object, _emailService.Object, _configuration.Object);
     }
 
     [Fact]
@@ -50,6 +53,21 @@ public class FollowServiceTests
     }
 
     [Fact]
+    public async Task FollowAsync_NotYetFollowing_NotifiesTargetByEmail()
+    {
+        var followerId = Guid.NewGuid();
+        var followingId = Guid.NewGuid();
+        _userRepository.Setup(r => r.GetByIdAsync(followingId)).ReturnsAsync(new User { Id = followingId, Email = "target@example.com" });
+        _userRepository.Setup(r => r.GetByIdAsync(followerId)).ReturnsAsync(new User { Id = followerId, FirstName = "Follower", LastName = "X" });
+        _followRepository.Setup(r => r.GetAsync(followerId, followingId)).ReturnsAsync((Follow?)null);
+        _followRepository.Setup(r => r.GetFollowerCountAsync(followingId)).ReturnsAsync(1);
+
+        await _sut.FollowAsync(followerId, followingId);
+
+        _emailService.Verify(e => e.SendEmailAsync("target@example.com", It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+    }
+
+    [Fact]
     public async Task FollowAsync_AlreadyFollowing_IsIdempotent()
     {
         var followerId = Guid.NewGuid();
@@ -62,6 +80,7 @@ public class FollowServiceTests
         await _sut.FollowAsync(followerId, followingId);
 
         _followRepository.Verify(r => r.AddAsync(It.IsAny<Follow>()), Times.Never);
+        _emailService.Verify(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
     }
 
     [Fact]

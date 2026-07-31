@@ -20,3 +20,9 @@ services:
         value: "60"
       - key: Cors__AllowedOrigins__0
         sync: false
+      - key: Email__ResendApiKey
+        sync: false
+      - key: Email__FromAddress
+        value: "Blog Platform <onboarding@resend.dev>"
+      - key: Frontend__BaseUrl
+        sync: false

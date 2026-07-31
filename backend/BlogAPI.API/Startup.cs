@@ -46,6 +46,7 @@ public class Startup
         services.AddScoped<ILikeService, LikeService>();
         services.AddScoped<IFollowService, FollowService>();
         services.AddScoped<IAdminService, AdminService>();
+        services.AddHttpClient<IEmailService, ResendEmailService>();
 
         // Validation
         services.AddValidatorsFromAssemblyContaining<RegisterUserDtoValidator>();
