@@ -155,6 +155,27 @@ public class PostsController : ControllerBase
     }
 
     /// <summary>
+    /// Top posts ranked by a time-decayed engagement score
+    /// </summary>
+    [HttpGet("trending")]
+    public async Task<ActionResult<ApiResponse<List<PostDto>>>> GetTrending([FromQuery] int count = 6)
+    {
+        var result = await _postService.GetTrendingAsync(count, CurrentUserId);
+        return Ok(ApiResponse<List<PostDto>>.Ok(result));
+    }
+
+    /// <summary>
+    /// Posts picked for the current user based on followed authors and liked categories,
+    /// falling back to trending posts for anonymous users or when there isn't enough signal
+    /// </summary>
+    [HttpGet("suggested")]
+    public async Task<ActionResult<ApiResponse<List<PostDto>>>> GetSuggested([FromQuery] int count = 6)
+    {
+        var result = await _postService.GetSuggestedAsync(count, CurrentUserId);
+        return Ok(ApiResponse<List<PostDto>>.Ok(result));
+    }
+
+    /// <summary>
     /// Get post by ID
     /// </summary>
     [HttpGet("{id}")]

@@ -1,0 +1,16 @@
+<section class="discovery-rail" *ngIf="isLoading || posts.length > 0">
+  <h2 class="discovery-heading">🔥 Trending</h2>
+
+  <div class="loading-spinner discovery-loading" *ngIf="isLoading">
+    <div class="spinner"></div>
+  </div>
+
+  <div class="discovery-scroll" *ngIf="!isLoading">
+    <app-post-card
+      *ngFor="let post of posts"
+      [post]="post"
+      (click)="viewPost(post.id)"
+      class="discovery-card"
+    ></app-post-card>
+  </div>
+</section>

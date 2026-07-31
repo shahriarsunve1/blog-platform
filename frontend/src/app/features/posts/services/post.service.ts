@@ -82,4 +82,19 @@ export class PostService {
   unlike(postId: string): Observable<ApiResponse<number>> {
     return this.http.delete<ApiResponse<number>>(`${this.apiUrl}/${postId}/like`);
   }
+
+  /**
+   * Top posts ranked by a time-decayed engagement score
+   */
+  getTrending(count: number = 6): Observable<ApiResponse<Post[]>> {
+    return this.http.get<ApiResponse<Post[]>>(`${this.apiUrl}/trending?count=${count}`);
+  }
+
+  /**
+   * Posts picked for the current user, falling back to trending when logged out
+   * or when there isn't enough signal yet
+   */
+  getSuggested(count: number = 6): Observable<ApiResponse<Post[]>> {
+    return this.http.get<ApiResponse<Post[]>>(`${this.apiUrl}/suggested?count=${count}`);
+  }
 }

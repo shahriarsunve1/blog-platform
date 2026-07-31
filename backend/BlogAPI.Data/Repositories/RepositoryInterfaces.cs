@@ -39,6 +39,7 @@ public interface IPostRepository : IGenericRepository<Post>
     Task<int> GetPublishedPostsCountAsync(Guid? categoryId = null, Guid? tagId = null, string? search = null, Guid? authorId = null);
     Task<int> CountByStatusAsync(PostStatus status);
     Task<List<Post>> GetRecentAsync(int count);
+    Task<List<Post>> GetTrendingCandidatesAsync(int limit);
 }
 
 /// <summary>
@@ -71,6 +72,7 @@ public interface ICommentRepository : IGenericRepository<Comment>
 public interface ILikeRepository : IGenericRepository<Like>
 {
     Task<Like?> GetByPostAndUserAsync(Guid postId, Guid userId);
+    Task<List<Guid>> GetLikedCategoryIdsAsync(Guid userId);
 }
 
 /// <summary>
@@ -80,4 +82,5 @@ public interface IFollowRepository : IGenericRepository<Follow>
 {
     Task<Follow?> GetAsync(Guid followerId, Guid followingId);
     Task<int> GetFollowerCountAsync(Guid userId);
+    Task<List<Guid>> GetFollowingIdsAsync(Guid followerId);
 }

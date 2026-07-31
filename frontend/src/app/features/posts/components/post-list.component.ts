@@ -6,15 +6,18 @@ import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { PostService } from '../services/post.service';
 import { TaxonomyService } from '../services/taxonomy.service';
+import { AuthService } from '../../../core/auth/auth.service';
 import { Category, Post, Tag } from '../../../shared/models/models';
 import { PostCardComponent } from './post-card.component';
+import { TrendingRailComponent } from './trending-rail.component';
+import { SuggestedForYouComponent } from './suggested-for-you.component';
 
 @Component({
   selector: 'app-post-list',
   templateUrl: './post-list.component.html',
   styleUrls: ['./posts.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, PostCardComponent]
+  imports: [CommonModule, FormsModule, PostCardComponent, TrendingRailComponent, SuggestedForYouComponent]
 })
 export class PostListComponent implements OnInit, OnDestroy {
   posts: Post[] = [];
@@ -36,8 +39,13 @@ export class PostListComponent implements OnInit, OnDestroy {
   constructor(
     private postService: PostService,
     private taxonomyService: TaxonomyService,
+    private authService: AuthService,
     private router: Router
   ) {}
+
+  get isLoggedIn(): boolean {
+    return this.authService.isLoggedIn();
+  }
 
   ngOnInit(): void {
     this.taxonomyService.getCategories().subscribe({

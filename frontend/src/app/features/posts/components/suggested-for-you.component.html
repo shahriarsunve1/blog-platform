@@ -1,0 +1,12 @@
+<section class="discovery-rail" *ngIf="!isLoading && posts.length > 0">
+  <h2 class="discovery-heading">Suggested for you</h2>
+
+  <div class="discovery-scroll">
+    <app-post-card
+      *ngFor="let post of posts"
+      [post]="post"
+      (click)="viewPost(post.id)"
+      class="discovery-card"
+    ></app-post-card>
+  </div>
+</section>

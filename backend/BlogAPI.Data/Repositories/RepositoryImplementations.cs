@@ -175,6 +175,20 @@ public class PostRepository : GenericRepository<Post>, IPostRepository
             .Take(count)
             .ToListAsync();
     }
+
+    public async Task<List<Post>> GetTrendingCandidatesAsync(int limit)
+    {
+        return await _context.Posts
+            .Where(p => p.Status == PostStatus.Published)
+            .Include(p => p.Author)
+            .Include(p => p.Categories)
+            .Include(p => p.Tags)
+            .Include(p => p.Likes)
+            .Include(p => p.Comments)
+            .OrderByDescending(p => p.PublishedAt)
+            .Take(limit)
+            .ToListAsync();
+    }
 }
 
 /// <summary>
@@ -239,6 +253,16 @@ public class LikeRepository : GenericRepository<Like>, ILikeRepository
     {
         return await _context.Likes.FirstOrDefaultAsync(l => l.PostId == postId && l.UserId == userId);
     }
+
+    public async Task<List<Guid>> GetLikedCategoryIdsAsync(Guid userId)
+    {
+        return await _context.Likes
+            .Where(l => l.UserId == userId)
+            .SelectMany(l => l.Post!.Categories)
+            .Select(c => c.Id)
+            .Distinct()
+            .ToListAsync();
+    }
 }
 
 /// <summary>
@@ -258,5 +282,13 @@ public class FollowRepository : GenericRepository<Follow>, IFollowRepository
     public async Task<int> GetFollowerCountAsync(Guid userId)
     {
         return await _context.Follows.CountAsync(f => f.FollowingId == userId);
+    }
+
+    public async Task<List<Guid>> GetFollowingIdsAsync(Guid followerId)
+    {
+        return await _context.Follows
+            .Where(f => f.FollowerId == followerId)
+            .Select(f => f.FollowingId)
+            .ToListAsync();
     }
 }

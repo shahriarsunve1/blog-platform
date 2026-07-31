@@ -15,6 +15,8 @@ public class PostServiceTests
     private readonly Mock<IUserRepository> _userRepository = new();
     private readonly Mock<ICategoryRepository> _categoryRepository = new();
     private readonly Mock<ITagRepository> _tagRepository = new();
+    private readonly Mock<IFollowRepository> _followRepository = new();
+    private readonly Mock<ILikeRepository> _likeRepository = new();
     private readonly PostService _sut;
 
     public PostServiceTests()
@@ -23,7 +25,9 @@ public class PostServiceTests
             _postRepository.Object,
             _userRepository.Object,
             _categoryRepository.Object,
-            _tagRepository.Object);
+            _tagRepository.Object,
+            _followRepository.Object,
+            _likeRepository.Object);
 
         _categoryRepository.Setup(r => r.GetByIdsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(new List<Category>());
         _tagRepository.Setup(r => r.GetByIdsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(new List<Tag>());
@@ -161,6 +165,43 @@ public class PostServiceTests
     }
 
     [Fact]
+    public async Task GetPostByIdAsync_ViewerIsNotAuthor_IncrementsViewCount()
+    {
+        var authorId = Guid.NewGuid();
+        var viewerId = Guid.NewGuid();
+        var post = new Post { Id = Guid.NewGuid(), UserId = authorId, ViewCount = 0 };
+        _postRepository.Setup(r => r.GetPostWithDetailsAsync(post.Id)).ReturnsAsync(post);
+
+        await _sut.GetPostByIdAsync(post.Id, viewerId);
+
+        _postRepository.Verify(r => r.UpdateAsync(It.Is<Post>(p => p.ViewCount == 1)), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetPostByIdAsync_ViewerIsAuthor_DoesNotIncrementViewCount()
+    {
+        var authorId = Guid.NewGuid();
+        var post = new Post { Id = Guid.NewGuid(), UserId = authorId, ViewCount = 0 };
+        _postRepository.Setup(r => r.GetPostWithDetailsAsync(post.Id)).ReturnsAsync(post);
+
+        await _sut.GetPostByIdAsync(post.Id, authorId);
+
+        _postRepository.Verify(r => r.UpdateAsync(It.IsAny<Post>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetPostByIdAsync_AnonymousViewer_IncrementsViewCount()
+    {
+        var authorId = Guid.NewGuid();
+        var post = new Post { Id = Guid.NewGuid(), UserId = authorId, ViewCount = 0 };
+        _postRepository.Setup(r => r.GetPostWithDetailsAsync(post.Id)).ReturnsAsync(post);
+
+        await _sut.GetPostByIdAsync(post.Id, null);
+
+        _postRepository.Verify(r => r.UpdateAsync(It.Is<Post>(p => p.ViewCount == 1)), Times.Once);
+    }
+
+    [Fact]
     public async Task GetUserPostsAsync_ReturnsAllStatusesIncludingDrafts()
     {
         var userId = Guid.NewGuid();
@@ -241,5 +282,182 @@ public class PostServiceTests
         await _sut.DeletePostAsync(post.Id, authorId);
 
         _postRepository.Verify(r => r.DeleteAsync(post), Times.Once);
+    }
+
+    private static Post MakeEngagedPost(DateTime publishedAt, int likes = 0, int comments = 0, int views = 0, Guid? authorId = null, List<Category>? categories = null)
+    {
+        var post = new Post
+        {
+            Id = Guid.NewGuid(),
+            UserId = authorId ?? Guid.NewGuid(),
+            Status = PostStatus.Published,
+            PublishedAt = publishedAt,
+            CreatedAt = publishedAt,
+            ViewCount = views,
+            Categories = categories ?? new List<Category>()
+        };
+        for (var i = 0; i < likes; i++)
+            post.Likes.Add(new Like { PostId = post.Id, UserId = Guid.NewGuid() });
+        for (var i = 0; i < comments; i++)
+            post.Comments.Add(new Comment { PostId = post.Id, UserId = Guid.NewGuid() });
+        return post;
+    }
+
+    [Fact]
+    public async Task GetTrendingAsync_RanksByDecayedEngagementNotRawEngagement()
+    {
+        var now = DateTime.UtcNow;
+        var oldButHeavilyLiked = MakeEngagedPost(now.AddDays(-30), likes: 50);
+        var freshModeratelyLiked = MakeEngagedPost(now.AddHours(-1), likes: 10);
+        _postRepository.Setup(r => r.GetTrendingCandidatesAsync(It.IsAny<int>()))
+            .ReturnsAsync(new List<Post> { oldButHeavilyLiked, freshModeratelyLiked });
+
+        var result = await _sut.GetTrendingAsync(6);
+
+        Assert.Equal(freshModeratelyLiked.Id, result[0].Id);
+        Assert.Equal(oldButHeavilyLiked.Id, result[1].Id);
+    }
+
+    [Fact]
+    public async Task GetTrendingAsync_ZeroEngagementTies_FallBackToPublishedAtOrder()
+    {
+        var now = DateTime.UtcNow;
+        var posts = new List<Post>
+        {
+            MakeEngagedPost(now.AddHours(-1)),
+            MakeEngagedPost(now.AddHours(-2)),
+            MakeEngagedPost(now.AddHours(-3))
+        };
+        _postRepository.Setup(r => r.GetTrendingCandidatesAsync(It.IsAny<int>())).ReturnsAsync(posts);
+
+        var result = await _sut.GetTrendingAsync(6);
+
+        Assert.Equal(posts.Select(p => p.Id), result.Select(p => p.Id));
+    }
+
+    [Fact]
+    public async Task GetTrendingAsync_RespectsCountParameter()
+    {
+        var now = DateTime.UtcNow;
+        var posts = Enumerable.Range(0, 10).Select(i => MakeEngagedPost(now.AddHours(-i))).ToList();
+        _postRepository.Setup(r => r.GetTrendingCandidatesAsync(It.IsAny<int>())).ReturnsAsync(posts);
+
+        var result = await _sut.GetTrendingAsync(3);
+
+        Assert.Equal(3, result.Count);
+    }
+
+    [Fact]
+    public async Task GetTrendingAsync_PublishedAtNull_FallsBackToCreatedAt_DoesNotThrow()
+    {
+        var post = new Post { Id = Guid.NewGuid(), Status = PostStatus.Published, PublishedAt = null, CreatedAt = DateTime.UtcNow.AddDays(-1) };
+        _postRepository.Setup(r => r.GetTrendingCandidatesAsync(It.IsAny<int>())).ReturnsAsync(new List<Post> { post });
+
+        var result = await _sut.GetTrendingAsync(6);
+
+        Assert.Single(result);
+    }
+
+    [Fact]
+    public async Task GetSuggestedAsync_NoCurrentUserId_DelegatesToTrending()
+    {
+        _postRepository.Setup(r => r.GetTrendingCandidatesAsync(It.IsAny<int>())).ReturnsAsync(new List<Post>());
+
+        await _sut.GetSuggestedAsync(6, null);
+
+        _followRepository.Verify(r => r.GetFollowingIdsAsync(It.IsAny<Guid>()), Times.Never);
+        _likeRepository.Verify(r => r.GetLikedCategoryIdsAsync(It.IsAny<Guid>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetSuggestedAsync_IncludesPostsByFollowedAuthor()
+    {
+        var userId = Guid.NewGuid();
+        var followedAuthorId = Guid.NewGuid();
+        var post = MakeEngagedPost(DateTime.UtcNow.AddHours(-1), authorId: followedAuthorId);
+        _postRepository.Setup(r => r.GetTrendingCandidatesAsync(It.IsAny<int>())).ReturnsAsync(new List<Post> { post });
+        _followRepository.Setup(r => r.GetFollowingIdsAsync(userId)).ReturnsAsync(new List<Guid> { followedAuthorId });
+        _likeRepository.Setup(r => r.GetLikedCategoryIdsAsync(userId)).ReturnsAsync(new List<Guid>());
+
+        var result = await _sut.GetSuggestedAsync(6, userId);
+
+        Assert.Contains(result, p => p.Id == post.Id);
+    }
+
+    [Fact]
+    public async Task GetSuggestedAsync_IncludesPostsSharingLikedCategory()
+    {
+        var userId = Guid.NewGuid();
+        var categoryId = Guid.NewGuid();
+        var category = new Category { Id = categoryId, Name = "Technology", Slug = "technology" };
+        var post = MakeEngagedPost(DateTime.UtcNow.AddHours(-1), categories: new List<Category> { category });
+        _postRepository.Setup(r => r.GetTrendingCandidatesAsync(It.IsAny<int>())).ReturnsAsync(new List<Post> { post });
+        _followRepository.Setup(r => r.GetFollowingIdsAsync(userId)).ReturnsAsync(new List<Guid>());
+        _likeRepository.Setup(r => r.GetLikedCategoryIdsAsync(userId)).ReturnsAsync(new List<Guid> { categoryId });
+
+        var result = await _sut.GetSuggestedAsync(6, userId);
+
+        Assert.Contains(result, p => p.Id == post.Id);
+    }
+
+    [Fact]
+    public async Task GetSuggestedAsync_ExcludesOwnPosts()
+    {
+        var userId = Guid.NewGuid();
+        var categoryId = Guid.NewGuid();
+        var category = new Category { Id = categoryId, Name = "Technology", Slug = "technology" };
+        var ownPost = MakeEngagedPost(DateTime.UtcNow.AddHours(-1), authorId: userId, categories: new List<Category> { category });
+        _postRepository.Setup(r => r.GetTrendingCandidatesAsync(It.IsAny<int>())).ReturnsAsync(new List<Post> { ownPost });
+        _followRepository.Setup(r => r.GetFollowingIdsAsync(userId)).ReturnsAsync(new List<Guid>());
+        _likeRepository.Setup(r => r.GetLikedCategoryIdsAsync(userId)).ReturnsAsync(new List<Guid> { categoryId });
+
+        var result = await _sut.GetSuggestedAsync(6, userId);
+
+        Assert.DoesNotContain(result, p => p.Id == ownPost.Id);
+    }
+
+    [Fact]
+    public async Task GetSuggestedAsync_ExcludesAlreadyLikedPosts()
+    {
+        var userId = Guid.NewGuid();
+        var followedAuthorId = Guid.NewGuid();
+        var post = MakeEngagedPost(DateTime.UtcNow.AddHours(-1), authorId: followedAuthorId);
+        post.Likes.Add(new Like { PostId = post.Id, UserId = userId });
+        _postRepository.Setup(r => r.GetTrendingCandidatesAsync(It.IsAny<int>())).ReturnsAsync(new List<Post> { post });
+        _followRepository.Setup(r => r.GetFollowingIdsAsync(userId)).ReturnsAsync(new List<Guid> { followedAuthorId });
+        _likeRepository.Setup(r => r.GetLikedCategoryIdsAsync(userId)).ReturnsAsync(new List<Guid>());
+
+        var result = await _sut.GetSuggestedAsync(6, userId);
+
+        Assert.DoesNotContain(result, p => p.Id == post.Id);
+    }
+
+    [Fact]
+    public async Task GetSuggestedAsync_FewerThanCountPersonalizedCandidates_BackfillsWithTrending()
+    {
+        var userId = Guid.NewGuid();
+        var unrelatedPost = MakeEngagedPost(DateTime.UtcNow.AddHours(-1), likes: 5);
+        _postRepository.Setup(r => r.GetTrendingCandidatesAsync(It.IsAny<int>())).ReturnsAsync(new List<Post> { unrelatedPost });
+        _followRepository.Setup(r => r.GetFollowingIdsAsync(userId)).ReturnsAsync(new List<Guid>());
+        _likeRepository.Setup(r => r.GetLikedCategoryIdsAsync(userId)).ReturnsAsync(new List<Guid>());
+
+        var result = await _sut.GetSuggestedAsync(6, userId);
+
+        Assert.Contains(result, p => p.Id == unrelatedPost.Id);
+    }
+
+    [Fact]
+    public async Task GetSuggestedAsync_Backfill_DoesNotDuplicatePersonalizedResults()
+    {
+        var userId = Guid.NewGuid();
+        var followedAuthorId = Guid.NewGuid();
+        var personalizedPost = MakeEngagedPost(DateTime.UtcNow.AddHours(-1), authorId: followedAuthorId, likes: 100);
+        _postRepository.Setup(r => r.GetTrendingCandidatesAsync(It.IsAny<int>())).ReturnsAsync(new List<Post> { personalizedPost });
+        _followRepository.Setup(r => r.GetFollowingIdsAsync(userId)).ReturnsAsync(new List<Guid> { followedAuthorId });
+        _likeRepository.Setup(r => r.GetLikedCategoryIdsAsync(userId)).ReturnsAsync(new List<Guid>());
+
+        var result = await _sut.GetSuggestedAsync(6, userId);
+
+        Assert.Single(result, p => p.Id == personalizedPost.Id);
     }
 }

@@ -22,6 +22,44 @@
   }
 }
 
+// Trending rail & Suggested-for-you (shared layout, used on the posts homepage)
+.discovery-rail {
+  margin-bottom: 40px;
+
+  .discovery-heading {
+    font-size: 20px;
+    color: var(--color-text);
+    margin-bottom: 20px;
+  }
+
+  .discovery-loading {
+    min-height: 120px;
+  }
+
+  .discovery-scroll {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scroll-snap-type: x proximity;
+
+    &::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--color-border);
+      border-radius: 3px;
+    }
+  }
+
+  .discovery-card {
+    flex: 0 0 260px;
+    scroll-snap-align: start;
+    cursor: pointer;
+  }
+}
+
 // Post List Styles
 .posts-container {
   max-width: 880px;

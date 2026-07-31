@@ -26,6 +26,8 @@ public interface IPostService
     Task<List<PostDto>> GetUserPostsAsync(Guid userId);
     Task<PostDto> UpdatePostAsync(Guid postId, UpdatePostDto dto, Guid userId);
     Task DeletePostAsync(Guid postId, Guid userId);
+    Task<List<PostDto>> GetTrendingAsync(int count = 6, Guid? currentUserId = null);
+    Task<List<PostDto>> GetSuggestedAsync(int count = 6, Guid? currentUserId = null);
 }
 
 /// <summary>

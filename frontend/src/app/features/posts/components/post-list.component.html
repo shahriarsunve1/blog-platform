@@ -6,6 +6,9 @@
     </button>
   </div>
 
+  <app-trending-rail></app-trending-rail>
+  <app-suggested-for-you *ngIf="isLoggedIn"></app-suggested-for-you>
+
   <div class="posts-filters">
     <input
       type="search"

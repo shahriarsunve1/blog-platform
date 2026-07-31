@@ -11,21 +11,29 @@ namespace BlogAPI.Core.Services;
 /// </summary>
 public class PostService : IPostService
 {
+    private const int DiscoveryCandidatePoolSize = 200;
+
     private readonly IPostRepository _postRepository;
     private readonly IUserRepository _userRepository;
     private readonly ICategoryRepository _categoryRepository;
     private readonly ITagRepository _tagRepository;
+    private readonly IFollowRepository _followRepository;
+    private readonly ILikeRepository _likeRepository;
 
     public PostService(
         IPostRepository postRepository,
         IUserRepository userRepository,
         ICategoryRepository categoryRepository,
-        ITagRepository tagRepository)
+        ITagRepository tagRepository,
+        IFollowRepository followRepository,
+        ILikeRepository likeRepository)
     {
         _postRepository = postRepository;
         _userRepository = userRepository;
         _categoryRepository = categoryRepository;
         _tagRepository = tagRepository;
+        _followRepository = followRepository;
+        _likeRepository = likeRepository;
     }
 
     public async Task<PaginatedResponse<PostDto>> GetPublishedPostsAsync(int pageNumber = 1, int pageSize = 10, Guid? categoryId = null, Guid? tagId = null, string? search = null, Guid? currentUserId = null, Guid? authorId = null)
@@ -49,7 +57,65 @@ public class PostService : IPostService
         if (post == null)
             throw new EntityNotFoundException("Post not found");
 
+        if (currentUserId != post.UserId)
+        {
+            post.ViewCount++;
+            await _postRepository.UpdateAsync(post);
+        }
+
         return MapToPostDto(post, currentUserId);
+    }
+
+    public async Task<List<PostDto>> GetTrendingAsync(int count = 6, Guid? currentUserId = null)
+    {
+        var candidates = await _postRepository.GetTrendingCandidatesAsync(DiscoveryCandidatePoolSize);
+        return RankByTrendingScore(candidates)
+            .Take(count)
+            .Select(p => MapToPostDto(p, currentUserId))
+            .ToList();
+    }
+
+    public async Task<List<PostDto>> GetSuggestedAsync(int count = 6, Guid? currentUserId = null)
+    {
+        if (currentUserId is not { } userId)
+            return await GetTrendingAsync(count, null);
+
+        var candidates = await _postRepository.GetTrendingCandidatesAsync(DiscoveryCandidatePoolSize);
+        var followingIds = new HashSet<Guid>(await _followRepository.GetFollowingIdsAsync(userId));
+        var likedCategoryIds = new HashSet<Guid>(await _likeRepository.GetLikedCategoryIdsAsync(userId));
+
+        var eligible = candidates
+            .Where(p => p.UserId != userId)
+            .Where(p => !p.Likes.Any(l => l.UserId == userId))
+            .ToList();
+
+        var personalized = eligible
+            .Where(p => followingIds.Contains(p.UserId) || p.Categories.Any(c => likedCategoryIds.Contains(c.Id)))
+            .OrderByDescending(p => p.PublishedAt)
+            .Take(count)
+            .ToList();
+
+        if (personalized.Count < count)
+        {
+            var usedIds = new HashSet<Guid>(personalized.Select(p => p.Id));
+            var backfill = RankByTrendingScore(eligible)
+                .Where(p => !usedIds.Contains(p.Id))
+                .Take(count - personalized.Count);
+            personalized.AddRange(backfill);
+        }
+
+        return personalized.Select(p => MapToPostDto(p, userId)).ToList();
+    }
+
+    private static IEnumerable<Post> RankByTrendingScore(IEnumerable<Post> posts) =>
+        posts.OrderByDescending(TrendingScore);
+
+    private static double TrendingScore(Post post)
+    {
+        var publishedAt = post.PublishedAt ?? post.CreatedAt;
+        var hoursSincePublished = Math.Max(0, (DateTime.UtcNow - publishedAt).TotalHours);
+        var engagement = (post.Likes.Count * 2) + (post.Comments.Count * 3) + post.ViewCount;
+        return engagement / Math.Pow(hoursSincePublished + 2, 1.5);
     }
 
     public async Task<PostDto> CreatePostAsync(Guid userId, CreatePostDto request)
