@@ -8,6 +8,7 @@
       <ng-container *ngIf="authService.currentUser$ | async as user; else guestLinks">
         <a routerLink="/my-posts" routerLinkActive="active">My Posts</a>
         <a routerLink="/posts/create" routerLinkActive="active" class="nav-cta">New Post</a>
+        <a *ngIf="user.role === 'Admin'" routerLink="/admin" routerLinkActive="active">Admin</a>
         <span class="nav-user">{{ user.firstName || user.email }}</span>
         <button class="btn-link" (click)="logout()">Logout</button>
       </ng-container>

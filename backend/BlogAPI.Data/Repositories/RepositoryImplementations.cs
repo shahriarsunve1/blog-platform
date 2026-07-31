@@ -52,6 +52,11 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
         await _context.SaveChangesAsync();
     }
+
+    public async Task<int> CountAsync()
+    {
+        return await _dbSet.CountAsync();
+    }
 }
 
 /// <summary>
@@ -76,6 +81,14 @@ public class UserRepository : GenericRepository<User>, IUserRepository
     public async Task<bool> EmailExistsAsync(string email)
     {
         return await _context.Users.AnyAsync(u => u.Email == email);
+    }
+
+    public async Task<List<User>> GetRecentAsync(int count)
+    {
+        return await _context.Users
+            .OrderByDescending(u => u.CreatedAt)
+            .Take(count)
+            .ToListAsync();
     }
 }
 
@@ -147,6 +160,20 @@ public class PostRepository : GenericRepository<Post>, IPostRepository
                 || p.Excerpt.ToLower().Contains(normalizedSearch)
                 || p.Content.ToLower().Contains(normalizedSearch))
             .CountAsync();
+    }
+
+    public async Task<int> CountByStatusAsync(PostStatus status)
+    {
+        return await _context.Posts.CountAsync(p => p.Status == status);
+    }
+
+    public async Task<List<Post>> GetRecentAsync(int count)
+    {
+        return await _context.Posts
+            .Include(p => p.Author)
+            .OrderByDescending(p => p.CreatedAt)
+            .Take(count)
+            .ToListAsync();
     }
 }
 

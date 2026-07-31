@@ -1,0 +1,66 @@
+<div class="admin-dashboard" *ngIf="!isLoading && dashboard">
+  <h1>Admin Dashboard</h1>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="stat-value">{{ dashboard.totalUsers }}</span>
+      <span class="stat-label">Users</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">{{ dashboard.totalPosts }}</span>
+      <span class="stat-label">Posts</span>
+      <span class="stat-breakdown">
+        {{ dashboard.publishedPosts }} published &middot; {{ dashboard.draftPosts }} drafts &middot; {{ dashboard.archivedPosts }} archived
+      </span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">{{ dashboard.totalComments }}</span>
+      <span class="stat-label">Comments</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">{{ dashboard.totalLikes }}</span>
+      <span class="stat-label">Likes</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">{{ dashboard.totalFollows }}</span>
+      <span class="stat-label">Follows</span>
+    </div>
+  </div>
+
+  <div class="activity-grid">
+    <section class="activity-panel">
+      <h2>Recent Users</h2>
+      <ul class="activity-list" *ngIf="dashboard.recentUsers.length; else noRecentUsers">
+        <li *ngFor="let user of dashboard.recentUsers">
+          <a [routerLink]="['/authors', user.id]" class="activity-title">{{ user.fullName }}</a>
+          <span class="activity-meta">{{ user.email }} &middot; {{ user.role }}</span>
+          <span class="activity-date">{{ user.createdAt | date: 'short' }}</span>
+        </li>
+      </ul>
+      <ng-template #noRecentUsers>
+        <p class="empty-state">No users yet.</p>
+      </ng-template>
+    </section>
+
+    <section class="activity-panel">
+      <h2>Recent Posts</h2>
+      <ul class="activity-list" *ngIf="dashboard.recentPosts.length; else noRecentPosts">
+        <li *ngFor="let post of dashboard.recentPosts">
+          <a [routerLink]="['/posts', post.id]" class="activity-title">{{ post.title }}</a>
+          <span class="activity-meta">by {{ post.authorName }} &middot; {{ post.status }}</span>
+          <span class="activity-date">{{ post.createdAt | date: 'short' }}</span>
+        </li>
+      </ul>
+      <ng-template #noRecentPosts>
+        <p class="empty-state">No posts yet.</p>
+      </ng-template>
+    </section>
+  </div>
+</div>
+
+<div class="loading-spinner" *ngIf="isLoading">
+  <div class="spinner"></div>
+  <p>Loading dashboard...</p>
+</div>
+
+<div class="alert alert-danger" *ngIf="error">{{ error }}</div>

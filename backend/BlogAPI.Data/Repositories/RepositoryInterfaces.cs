@@ -1,4 +1,5 @@
 using BlogAPI.Domain.Entities;
+using BlogAPI.Domain.Enums;
 
 namespace BlogAPI.Data.Repositories;
 
@@ -13,6 +14,7 @@ public interface IGenericRepository<T> where T : class
     Task UpdateAsync(T entity);
     Task DeleteAsync(T entity);
     Task SaveChangesAsync();
+    Task<int> CountAsync();
 }
 
 /// <summary>
@@ -23,6 +25,7 @@ public interface IUserRepository : IGenericRepository<User>
     Task<User?> GetByEmailAsync(string email);
     Task<User?> GetByUsernameAsync(string username);
     Task<bool> EmailExistsAsync(string email);
+    Task<List<User>> GetRecentAsync(int count);
 }
 
 /// <summary>
@@ -34,6 +37,8 @@ public interface IPostRepository : IGenericRepository<Post>
     Task<List<Post>> GetUserPostsAsync(Guid userId);
     Task<Post?> GetPostWithDetailsAsync(Guid id);
     Task<int> GetPublishedPostsCountAsync(Guid? categoryId = null, Guid? tagId = null, string? search = null, Guid? authorId = null);
+    Task<int> CountByStatusAsync(PostStatus status);
+    Task<List<Post>> GetRecentAsync(int count);
 }
 
 /// <summary>

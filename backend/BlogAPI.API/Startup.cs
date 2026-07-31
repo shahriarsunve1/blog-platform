@@ -45,6 +45,7 @@ public class Startup
         services.AddScoped<ICommentService, CommentService>();
         services.AddScoped<ILikeService, LikeService>();
         services.AddScoped<IFollowService, FollowService>();
+        services.AddScoped<IAdminService, AdminService>();
 
         // Validation
         services.AddValidatorsFromAssemblyContaining<RegisterUserDtoValidator>();

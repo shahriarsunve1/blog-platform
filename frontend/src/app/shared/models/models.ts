@@ -136,3 +136,35 @@ export interface PaginatedResponse<T> {
   pageSize: number;
   totalPages: number;
 }
+
+/**
+ * Admin dashboard models
+ */
+export interface AdminUserSummary {
+  id: string;
+  fullName: string;
+  email: string;
+  role: string;
+  createdAt: string;
+}
+
+export interface AdminPostSummary {
+  id: string;
+  title: string;
+  status: string;
+  authorName: string;
+  createdAt: string;
+}
+
+export interface AdminDashboard {
+  totalUsers: number;
+  totalPosts: number;
+  publishedPosts: number;
+  draftPosts: number;
+  archivedPosts: number;
+  totalComments: number;
+  totalLikes: number;
+  totalFollows: number;
+  recentUsers: AdminUserSummary[];
+  recentPosts: AdminPostSummary[];
+}

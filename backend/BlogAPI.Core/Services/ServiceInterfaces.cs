@@ -83,3 +83,11 @@ public interface IFollowService
     Task<int> FollowAsync(Guid followerId, Guid followingId);
     Task<int> UnfollowAsync(Guid followerId, Guid followingId);
 }
+
+/// <summary>
+/// Interface for admin dashboard service
+/// </summary>
+public interface IAdminService
+{
+    Task<AdminDashboardDto> GetDashboardAsync();
+}

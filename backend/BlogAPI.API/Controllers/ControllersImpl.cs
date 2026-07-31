@@ -346,3 +346,31 @@ public class UsersController : ControllerBase
         return Ok(ApiResponse<int>.Ok(followerCount, "Unfollowed"));
     }
 }
+
+/// <summary>
+/// Admin-only endpoints. The JWT's "role" claim is one of the JwtSecurityTokenHandler's
+/// default inbound-mapped short claim names, so it arrives on HttpContext.User as
+/// ClaimTypes.Role - [Authorize(Roles=...)] picks it up with no extra configuration.
+/// </summary>
+[ApiController]
+[Route("api/[controller]")]
+[Authorize(Roles = "Admin")]
+public class AdminController : ControllerBase
+{
+    private readonly IAdminService _adminService;
+
+    public AdminController(IAdminService adminService)
+    {
+        _adminService = adminService;
+    }
+
+    /// <summary>
+    /// Platform-wide stats and recent activity (admin only)
+    /// </summary>
+    [HttpGet("dashboard")]
+    public async Task<ActionResult<ApiResponse<AdminDashboardDto>>> GetDashboard()
+    {
+        var result = await _adminService.GetDashboardAsync();
+        return Ok(ApiResponse<AdminDashboardDto>.Ok(result));
+    }
+}
