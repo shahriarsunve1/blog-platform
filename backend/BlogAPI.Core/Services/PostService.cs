@@ -130,7 +130,7 @@ public class PostService : IPostService
             UserId = userId,
             Title = request.Title,
             Excerpt = request.Excerpt,
-            Content = request.Content,
+            Content = PostContentSanitizer.Sanitize(request.Content),
             Status = status,
             ViewCount = 0,
             CreatedAt = DateTime.UtcNow,
@@ -158,7 +158,7 @@ public class PostService : IPostService
 
         post.Title = request.Title;
         post.Excerpt = request.Excerpt;
-        post.Content = request.Content;
+        post.Content = PostContentSanitizer.Sanitize(request.Content);
         post.Status = Enum.Parse<PostStatus>(request.Status);
         post.UpdatedAt = DateTime.UtcNow;
 

@@ -38,14 +38,14 @@
 
     <div class="form-group">
       <label for="content">Content</label>
-      <textarea 
+      <quill-editor
         id="content"
         formControlName="content"
-        class="form-control"
+        [modules]="quillModules"
         [class.is-invalid]="isFieldInvalid('content')"
-        rows="10"
-        placeholder="Enter post content (HTML supported)"
-      ></textarea>
+        placeholder="Write your post content..."
+        (onEditorCreated)="onEditorCreated($event)"
+      ></quill-editor>
       <div class="invalid-feedback" *ngIf="isFieldInvalid('content')">
         <span *ngIf="form.get('content')?.errors?.['required']">Content is required</span>
         <span *ngIf="form.get('content')?.errors?.['minlength']">Content must be at least 50 characters</span>

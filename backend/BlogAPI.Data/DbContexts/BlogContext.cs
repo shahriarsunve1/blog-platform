@@ -19,6 +19,7 @@ public class BlogContext : DbContext
     public DbSet<Comment> Comments { get; set; }
     public DbSet<Like> Likes { get; set; }
     public DbSet<Follow> Follows { get; set; }
+    public DbSet<MediaFile> MediaFiles { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -115,6 +116,15 @@ public class BlogContext : DbContext
             .WithMany()
             .HasForeignKey(f => f.FollowingId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // MediaFile configuration
+        modelBuilder.Entity<MediaFile>()
+            .HasKey(m => m.Id);
+        modelBuilder.Entity<MediaFile>()
+            .HasOne(m => m.UploadedBy)
+            .WithMany()
+            .HasForeignKey(m => m.UploadedByUserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Starter categories/tags so posts have something to attach to out of the box
         modelBuilder.Entity<Category>().HasData(

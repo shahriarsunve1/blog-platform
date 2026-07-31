@@ -71,6 +71,11 @@ export interface CreatePostDto {
 
 export interface UpdatePostDto extends CreatePostDto {}
 
+export interface MediaFileDto {
+  id: string;
+  url: string;
+}
+
 export interface Category {
   id: string;
   name: string;

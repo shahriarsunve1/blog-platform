@@ -5,6 +5,7 @@ using BlogAPI.Core.Validators;
 using BlogAPI.API.Middleware;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
 using FluentValidation;
 using System.Text;
@@ -46,6 +47,7 @@ public class Startup
         services.AddScoped<ILikeService, LikeService>();
         services.AddScoped<IFollowService, FollowService>();
         services.AddScoped<IAdminService, AdminService>();
+        services.AddScoped<IMediaService, MediaService>();
         services.AddHttpClient<IEmailService, ResendEmailService>();
 
         // Validation
@@ -100,6 +102,14 @@ public class Startup
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
+        // Render terminates TLS and forwards plain HTTP internally; trust its
+        // X-Forwarded-Proto header so Request.Scheme (used to build absolute media
+        // URLs) reports "https" instead of "http", avoiding mixed-content blocking.
+        app.UseForwardedHeaders(new ForwardedHeadersOptions
+        {
+            ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+        });
+
         app.UseMiddleware<ErrorHandlingMiddleware>();
 
         // Swagger stays available in all environments for now (hobby project, no

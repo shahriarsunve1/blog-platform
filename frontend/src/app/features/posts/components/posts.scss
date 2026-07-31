@@ -792,6 +792,37 @@
         line-height: 1.6;
       }
 
+      quill-editor {
+        display: block;
+
+        ::ng-deep .ql-toolbar.ql-snow {
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+          background: var(--color-bg);
+        }
+
+        ::ng-deep .ql-container.ql-snow {
+          border: 1px solid var(--color-border);
+          border-top: none;
+          border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+          background: var(--color-bg);
+          font-family: var(--font-sans);
+          font-size: 14.5px;
+        }
+
+        ::ng-deep .ql-editor {
+          color: var(--color-text);
+          min-height: 220px;
+        }
+
+        &.is-invalid {
+          ::ng-deep .ql-toolbar.ql-snow,
+          ::ng-deep .ql-container.ql-snow {
+            border-color: var(--color-danger);
+          }
+        }
+      }
+
       .invalid-feedback {
         display: block;
         margin-top: 6px;

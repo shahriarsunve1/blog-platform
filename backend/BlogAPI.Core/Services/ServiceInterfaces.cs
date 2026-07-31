@@ -1,4 +1,5 @@
 using BlogAPI.Core.DTOs;
+using BlogAPI.Domain.Entities;
 
 namespace BlogAPI.Core.Services;
 
@@ -92,6 +93,15 @@ public interface IFollowService
 public interface IAdminService
 {
     Task<AdminDashboardDto> GetDashboardAsync();
+}
+
+/// <summary>
+/// Interface for media (image) upload/storage used for embedding images in post content
+/// </summary>
+public interface IMediaService
+{
+    Task<MediaFile> UploadAsync(Guid userId, string fileName, string contentType, byte[] data);
+    Task<MediaFile?> GetAsync(Guid id);
 }
 
 /// <summary>

@@ -2,18 +2,23 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, FormsModule, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { QuillModule } from 'ngx-quill';
 import { forkJoin } from 'rxjs';
 import { PostService } from '../services/post.service';
 import { TaxonomyService } from '../services/taxonomy.service';
+import { MediaService } from '../services/media.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Category, CreatePostDto, Tag, UpdatePostDto } from '../../../shared/models/models';
+
+const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 
 @Component({
   selector: 'app-post-form',
   templateUrl: './post-form.component.html',
   styleUrls: ['./posts.scss'],
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, CommonModule]
+  imports: [ReactiveFormsModule, FormsModule, CommonModule, QuillModule]
 })
 export class PostFormComponent implements OnInit {
   form!: FormGroup;
@@ -36,10 +41,29 @@ export class PostFormComponent implements OnInit {
   isAddingTag = false;
   taxonomyError = '';
 
+  private quillEditor: any;
+
+  quillModules = {
+    toolbar: {
+      container: [
+        [{ header: [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        ['blockquote', 'code-block'],
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        ['link', 'image'],
+        ['clean']
+      ],
+      handlers: {
+        image: () => this.selectAndUploadImage()
+      }
+    }
+  };
+
   constructor(
     private fb: FormBuilder,
     private postService: PostService,
     private taxonomyService: TaxonomyService,
+    private mediaService: MediaService,
     private authService: AuthService,
     private route: ActivatedRoute,
     private router: Router
@@ -106,6 +130,45 @@ export class PostFormComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  onEditorCreated(editor: any): void {
+    this.quillEditor = editor;
+  }
+
+  private selectAndUploadImage(): void {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', ALLOWED_IMAGE_TYPES.join(','));
+
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        this.errorMessage = 'Only PNG, JPEG, GIF, and WEBP images are supported';
+        return;
+      }
+      if (file.size > MAX_IMAGE_SIZE_BYTES) {
+        this.errorMessage = 'Image exceeds the 5MB size limit';
+        return;
+      }
+
+      const range = this.quillEditor.getSelection(true);
+      this.mediaService.upload(file).subscribe({
+        next: (response) => {
+          if (response.data) {
+            this.quillEditor.insertEmbed(range.index, 'image', response.data.url, 'user');
+            this.quillEditor.setSelection(range.index + 1, 0);
+          }
+        },
+        error: (err) => {
+          this.errorMessage = err.error?.message || 'Failed to upload image';
+        }
+      });
+    };
+
+    input.click();
   }
 
   isFieldInvalid(fieldName: string): boolean {

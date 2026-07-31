@@ -22,7 +22,8 @@
               "src/assets"
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "node_modules/quill/dist/quill.snow.css"
             ],
             "scripts": []
           },
@@ -78,7 +79,8 @@
               "src/assets"
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "node_modules/quill/dist/quill.snow.css"
             ],
             "scripts": []
           }
