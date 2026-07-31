@@ -2,7 +2,17 @@
   <nav class="app-nav">
     <a routerLink="/posts" class="brand">Blog Platform</a>
 
-    <div class="nav-links">
+    <button
+      class="nav-toggle"
+      type="button"
+      [attr.aria-expanded]="mobileMenuOpen"
+      aria-label="Toggle navigation menu"
+      (click)="toggleMobileMenu()"
+    >
+      {{ mobileMenuOpen ? '✕' : '☰' }}
+    </button>
+
+    <div class="nav-links" [class.open]="mobileMenuOpen" (click)="closeMobileMenu()">
       <a routerLink="/posts" routerLinkActive="active">Posts</a>
 
       <ng-container *ngIf="authService.currentUser$ | async as user; else guestLinks">

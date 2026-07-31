@@ -23,6 +23,15 @@
     font-size: 28px;
   }
 
+  .name-row {
+    display: flex;
+    gap: 16px;
+
+    .form-group {
+      flex: 1;
+    }
+  }
+
   .form-group {
     margin-bottom: 20px;
 
@@ -135,6 +144,11 @@
     h2 {
       font-size: 24px;
       margin-bottom: 24px;
+    }
+
+    .name-row {
+      flex-direction: column;
+      gap: 0;
     }
   }
 }

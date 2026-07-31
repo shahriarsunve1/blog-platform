@@ -11,9 +11,19 @@ import { AuthService } from './core/auth/auth.service';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
+  mobileMenuOpen = false;
+
   constructor(public authService: AuthService) {}
 
   logout(): void {
     this.authService.logout();
+  }
+
+  toggleMobileMenu(): void {
+    this.mobileMenuOpen = !this.mobileMenuOpen;
+  }
+
+  closeMobileMenu(): void {
+    this.mobileMenuOpen = false;
   }
 }

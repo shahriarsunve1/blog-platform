@@ -117,3 +117,14 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+@media (max-width: 768px) {
+  .author-header {
+    flex-direction: column;
+    align-items: stretch;
+
+    .follow-btn {
+      align-self: flex-start;
+    }
+  }
+}

@@ -3,38 +3,34 @@
     <h2>Register</h2>
     
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
-      <div class="row">
-        <div class="col-md-6">
-          <div class="form-group">
-            <label for="firstName">First Name</label>
-            <input 
-              id="firstName"
-              type="text" 
-              formControlName="firstName"
-              class="form-control"
-              [class.is-invalid]="isFieldInvalid('firstName')"
-              placeholder="John"
-            />
-            <div class="invalid-feedback" *ngIf="isFieldInvalid('firstName')">
-              First name is required
-            </div>
+      <div class="name-row">
+        <div class="form-group">
+          <label for="firstName">First Name</label>
+          <input
+            id="firstName"
+            type="text"
+            formControlName="firstName"
+            class="form-control"
+            [class.is-invalid]="isFieldInvalid('firstName')"
+            placeholder="John"
+          />
+          <div class="invalid-feedback" *ngIf="isFieldInvalid('firstName')">
+            First name is required
           </div>
         </div>
 
-        <div class="col-md-6">
-          <div class="form-group">
-            <label for="lastName">Last Name</label>
-            <input 
-              id="lastName"
-              type="text" 
-              formControlName="lastName"
-              class="form-control"
-              [class.is-invalid]="isFieldInvalid('lastName')"
-              placeholder="Doe"
-            />
-            <div class="invalid-feedback" *ngIf="isFieldInvalid('lastName')">
-              Last name is required
-            </div>
+        <div class="form-group">
+          <label for="lastName">Last Name</label>
+          <input
+            id="lastName"
+            type="text"
+            formControlName="lastName"
+            class="form-control"
+            [class.is-invalid]="isFieldInvalid('lastName')"
+            placeholder="Doe"
+          />
+          <div class="invalid-feedback" *ngIf="isFieldInvalid('lastName')">
+            Last name is required
           </div>
         </div>
       </div>
