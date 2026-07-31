@@ -54,7 +54,8 @@
   }
 
   .discovery-card {
-    flex: 0 0 260px;
+    flex: 0 0 300px;
+    display: block;
     scroll-snap-align: start;
     cursor: pointer;
   }
@@ -1031,6 +1032,7 @@
     line-height: 1.6;
     margin: 0;
     flex: 1;
+    min-height: 0;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     line-clamp: 3;
