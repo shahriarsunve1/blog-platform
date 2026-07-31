@@ -3,6 +3,14 @@
     <h2>{{ isEditing ? 'Edit Post' : 'Create New Post' }}</h2>
   </div>
 
+  <div class="draft-banner" *ngIf="draftBannerVisible">
+    <span>You have unsaved changes autosaved {{ draftSavedAt | date: 'short' }}.</span>
+    <div class="draft-banner-actions">
+      <button type="button" class="btn btn-sm btn-primary" (click)="restoreDraft()">Restore</button>
+      <button type="button" class="btn btn-sm btn-outline-secondary" (click)="discardDraft()">Discard</button>
+    </div>
+  </div>
+
   <form [formGroup]="form" (ngSubmit)="onSubmit()">
     <div class="form-group">
       <label for="title">Title</label>
@@ -17,6 +25,26 @@
       <div class="invalid-feedback" *ngIf="isFieldInvalid('title')">
         <span *ngIf="form.get('title')?.errors?.['required']">Title is required</span>
         <span *ngIf="form.get('title')?.errors?.['minlength']">Title must be at least 3 characters</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Cover Image</label>
+      <div class="cover-image-picker">
+        <div class="cover-image-preview" *ngIf="coverImageUrl">
+          <img [src]="coverImageUrl" alt="Cover preview" />
+          <button type="button" class="remove-cover-btn" (click)="removeCoverImage()" aria-label="Remove cover image">✕</button>
+        </div>
+        <label class="btn btn-outline-secondary cover-upload-btn" *ngIf="!coverImageUrl">
+          {{ isUploadingCoverImage ? 'Uploading...' : '+ Add Cover Image' }}
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/gif,image/webp"
+            (change)="onCoverImageSelected($event)"
+            [disabled]="isUploadingCoverImage"
+            hidden
+          />
+        </label>
       </div>
     </div>
 

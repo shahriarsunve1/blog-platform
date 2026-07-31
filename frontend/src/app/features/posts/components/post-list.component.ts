@@ -11,6 +11,7 @@ import { Category, Post, Tag } from '../../../shared/models/models';
 import { PostCardComponent } from './post-card.component';
 import { TrendingRailComponent } from './trending-rail.component';
 import { SuggestedForYouComponent } from './suggested-for-you.component';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-post-list',
@@ -20,6 +21,8 @@ import { SuggestedForYouComponent } from './suggested-for-you.component';
   imports: [CommonModule, FormsModule, PostCardComponent, TrendingRailComponent, SuggestedForYouComponent]
 })
 export class PostListComponent implements OnInit, OnDestroy {
+  feedUrl = `${environment.apiUrl}/posts/feed.xml`;
+
   posts: Post[] = [];
   isLoading = false;
   currentPage = 1;

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, FormsModule, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -12,6 +12,18 @@ import { Category, CreatePostDto, Tag, UpdatePostDto } from '../../../shared/mod
 
 const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+const AUTOSAVE_INTERVAL_MS = 10000;
+
+interface PostDraft {
+  title: string;
+  excerpt: string;
+  content: string;
+  status: string;
+  coverImageUrl: string;
+  selectedCategoryIds: string[];
+  selectedTagIds: string[];
+  savedAt: string;
+}
 
 @Component({
   selector: 'app-post-form',
@@ -20,7 +32,7 @@ const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
   standalone: true,
   imports: [ReactiveFormsModule, FormsModule, CommonModule, QuillModule]
 })
-export class PostFormComponent implements OnInit {
+export class PostFormComponent implements OnInit, OnDestroy {
   form!: FormGroup;
   isLoading = false;
   isEditing = false;
@@ -40,6 +52,14 @@ export class PostFormComponent implements OnInit {
   isAddingCategory = false;
   isAddingTag = false;
   taxonomyError = '';
+
+  coverImageUrl = '';
+  isUploadingCoverImage = false;
+
+  draftBannerVisible = false;
+  draftSavedAt: Date | null = null;
+  private pendingDraft: PostDraft | null = null;
+  private autosaveIntervalId: ReturnType<typeof setInterval> | null = null;
 
   private quillEditor: any;
 
@@ -85,10 +105,79 @@ export class PostFormComponent implements OnInit {
           this.isEditing = true;
           this.postId = id;
           this.loadPost(this.postId);
+        } else {
+          this.checkForDraft();
         }
       },
       error: (err) => console.error('Error loading categories/tags:', err)
     });
+
+    this.autosaveIntervalId = setInterval(() => this.saveDraftSnapshot(), AUTOSAVE_INTERVAL_MS);
+  }
+
+  ngOnDestroy(): void {
+    if (this.autosaveIntervalId) {
+      clearInterval(this.autosaveIntervalId);
+    }
+  }
+
+  private get draftStorageKey(): string {
+    return `post-draft:${this.postId ?? 'new'}`;
+  }
+
+  private checkForDraft(): void {
+    const raw = localStorage.getItem(this.draftStorageKey);
+    if (!raw) return;
+
+    try {
+      const draft = JSON.parse(raw) as PostDraft;
+      this.pendingDraft = draft;
+      this.draftSavedAt = new Date(draft.savedAt);
+      this.draftBannerVisible = true;
+    } catch {
+      localStorage.removeItem(this.draftStorageKey);
+    }
+  }
+
+  private saveDraftSnapshot(): void {
+    const title = (this.form.get('title')?.value ?? '').trim();
+    const content = (this.form.get('content')?.value ?? '').trim();
+    if (!title && !content) return;
+
+    const snapshot: PostDraft = {
+      title: this.form.get('title')?.value ?? '',
+      excerpt: this.form.get('excerpt')?.value ?? '',
+      content: this.form.get('content')?.value ?? '',
+      status: this.form.get('status')?.value ?? 'Draft',
+      coverImageUrl: this.coverImageUrl,
+      selectedCategoryIds: this.selectedCategoryIds,
+      selectedTagIds: this.selectedTagIds,
+      savedAt: new Date().toISOString()
+    };
+    localStorage.setItem(this.draftStorageKey, JSON.stringify(snapshot));
+  }
+
+  restoreDraft(): void {
+    if (!this.pendingDraft) return;
+
+    this.form.patchValue({
+      title: this.pendingDraft.title,
+      excerpt: this.pendingDraft.excerpt,
+      content: this.pendingDraft.content,
+      status: this.pendingDraft.status
+    });
+    this.coverImageUrl = this.pendingDraft.coverImageUrl;
+    this.selectedCategoryIds = this.pendingDraft.selectedCategoryIds;
+    this.selectedTagIds = this.pendingDraft.selectedTagIds;
+
+    this.draftBannerVisible = false;
+    this.pendingDraft = null;
+  }
+
+  discardDraft(): void {
+    localStorage.removeItem(this.draftStorageKey);
+    this.draftBannerVisible = false;
+    this.pendingDraft = null;
   }
 
   private initializeForm(): void {
@@ -111,6 +200,7 @@ export class PostFormComponent implements OnInit {
             content: response.data.content,
             status: response.data.status
           });
+          this.coverImageUrl = response.data.coverImageUrl;
 
           const categoryNames = new Set(response.data.categories);
           this.selectedCategoryIds = this.categories
@@ -121,6 +211,8 @@ export class PostFormComponent implements OnInit {
           this.selectedTagIds = this.tags
             .filter(t => tagNames.has(t.name))
             .map(t => t.id);
+
+          this.checkForDraft();
         }
         this.isLoading = false;
       },
@@ -134,6 +226,44 @@ export class PostFormComponent implements OnInit {
 
   onEditorCreated(editor: any): void {
     this.quillEditor = editor;
+  }
+
+  onCoverImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      this.errorMessage = 'Only PNG, JPEG, GIF, and WEBP images are supported';
+      input.value = '';
+      return;
+    }
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      this.errorMessage = 'Image exceeds the 5MB size limit';
+      input.value = '';
+      return;
+    }
+
+    this.errorMessage = '';
+    this.isUploadingCoverImage = true;
+    this.mediaService.upload(file).subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.coverImageUrl = response.data.url;
+        }
+        this.isUploadingCoverImage = false;
+      },
+      error: (err) => {
+        this.errorMessage = err.error?.message || 'Failed to upload image';
+        this.isUploadingCoverImage = false;
+      }
+    });
+
+    input.value = '';
+  }
+
+  removeCoverImage(): void {
+    this.coverImageUrl = '';
   }
 
   private selectAndUploadImage(): void {
@@ -256,6 +386,7 @@ export class PostFormComponent implements OnInit {
 
     const payload = {
       ...this.form.value,
+      coverImageUrl: this.coverImageUrl,
       categoryIds: this.selectedCategoryIds,
       tagIds: this.selectedTagIds
     };
@@ -264,6 +395,7 @@ export class PostFormComponent implements OnInit {
       const updateRequest: UpdatePostDto = payload;
       this.postService.updatePost(this.postId, updateRequest).subscribe({
         next: () => {
+          localStorage.removeItem(this.draftStorageKey);
           this.successMessage = 'Post updated successfully!';
           setTimeout(() => {
             this.router.navigate(['/posts', this.postId]);
@@ -278,6 +410,7 @@ export class PostFormComponent implements OnInit {
       const createRequest: CreatePostDto = payload;
       this.postService.createPost(createRequest).subscribe({
         next: (response) => {
+          localStorage.removeItem(this.draftStorageKey);
           this.successMessage = 'Post created successfully!';
           setTimeout(() => {
             this.router.navigate(['/posts', response.data?.id]);

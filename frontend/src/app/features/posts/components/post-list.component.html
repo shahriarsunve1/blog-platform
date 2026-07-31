@@ -1,9 +1,12 @@
 <div class="posts-container">
   <div class="posts-header">
     <h1>Blog Posts</h1>
-    <button class="btn btn-primary" (click)="createPost()">
-      <span>+ New Post</span>
-    </button>
+    <div class="posts-header-actions">
+      <a class="rss-link" [href]="feedUrl" target="_blank" rel="noopener" title="RSS feed">RSS</a>
+      <button class="btn btn-primary" (click)="createPost()">
+        <span>+ New Post</span>
+      </button>
+    </div>
   </div>
 
   <app-trending-rail></app-trending-rail>
