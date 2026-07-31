@@ -1,0 +1,180 @@
+<div class="profile-settings-container">
+  <div class="settings-header">
+    <h1>Profile Settings</h1>
+  </div>
+
+  <div class="loading-spinner" *ngIf="isLoadingProfile">
+    <div class="spinner"></div>
+  </div>
+
+  <div class="settings-content" *ngIf="!isLoadingProfile">
+    <section class="settings-card">
+      <h2>Basic Info</h2>
+
+      <div class="avatar-row">
+        <div class="avatar-preview">
+          <img *ngIf="avatarUrl" [src]="avatarUrl" alt="Profile avatar" />
+          <span *ngIf="!avatarUrl" class="avatar-placeholder">{{ profileForm.value.firstName?.[0] }}{{ profileForm.value.lastName?.[0] }}</span>
+        </div>
+        <label class="btn btn-outline-secondary avatar-upload-btn">
+          {{ isUploadingAvatar ? 'Uploading...' : 'Change Photo' }}
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/gif,image/webp"
+            (change)="onAvatarSelected($event)"
+            [disabled]="isUploadingAvatar"
+            hidden
+          />
+        </label>
+      </div>
+
+      <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+        <div class="name-row">
+          <div class="form-group">
+            <label for="firstName">First Name</label>
+            <input
+              id="firstName"
+              type="text"
+              formControlName="firstName"
+              class="form-control"
+              [class.is-invalid]="isFieldInvalid(profileForm, 'firstName')"
+            />
+            <div class="invalid-feedback" *ngIf="isFieldInvalid(profileForm, 'firstName')">First name is required</div>
+          </div>
+          <div class="form-group">
+            <label for="lastName">Last Name</label>
+            <input
+              id="lastName"
+              type="text"
+              formControlName="lastName"
+              class="form-control"
+              [class.is-invalid]="isFieldInvalid(profileForm, 'lastName')"
+            />
+            <div class="invalid-feedback" *ngIf="isFieldInvalid(profileForm, 'lastName')">Last name is required</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input
+            id="username"
+            type="text"
+            formControlName="username"
+            class="form-control"
+            [class.is-invalid]="isFieldInvalid(profileForm, 'username')"
+          />
+          <div class="invalid-feedback" *ngIf="isFieldInvalid(profileForm, 'username')">Username is required</div>
+        </div>
+
+        <div class="form-group">
+          <label for="bio">Bio</label>
+          <textarea
+            id="bio"
+            formControlName="bio"
+            class="form-control"
+            rows="4"
+            placeholder="Tell readers a bit about yourself..."
+          ></textarea>
+        </div>
+
+        <div class="alert alert-danger" *ngIf="profileError">{{ profileError }}</div>
+        <div class="alert alert-success" *ngIf="profileSuccess">{{ profileSuccess }}</div>
+
+        <button type="submit" class="btn btn-primary" [disabled]="profileForm.invalid || isSavingProfile">
+          {{ isSavingProfile ? 'Saving...' : 'Save Changes' }}
+        </button>
+      </form>
+    </section>
+
+    <section class="settings-card">
+      <h2>Change Password</h2>
+      <form [formGroup]="passwordForm" (ngSubmit)="savePassword()">
+        <div class="form-group">
+          <label for="currentPassword">Current Password</label>
+          <input
+            id="currentPassword"
+            type="password"
+            formControlName="currentPassword"
+            class="form-control"
+            [class.is-invalid]="isFieldInvalid(passwordForm, 'currentPassword')"
+          />
+          <div class="invalid-feedback" *ngIf="isFieldInvalid(passwordForm, 'currentPassword')">Current password is required</div>
+        </div>
+
+        <div class="form-group">
+          <label for="newPassword">New Password</label>
+          <input
+            id="newPassword"
+            type="password"
+            formControlName="newPassword"
+            class="form-control"
+            [class.is-invalid]="isFieldInvalid(passwordForm, 'newPassword')"
+          />
+          <div class="invalid-feedback" *ngIf="isFieldInvalid(passwordForm, 'newPassword')">Password must be at least 6 characters</div>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirm New Password</label>
+          <input
+            id="confirmPassword"
+            type="password"
+            formControlName="confirmPassword"
+            class="form-control"
+            [class.is-invalid]="isFieldInvalid(passwordForm, 'confirmPassword') || passwordsMismatch"
+          />
+          <div class="invalid-feedback" *ngIf="passwordsMismatch">Passwords do not match</div>
+        </div>
+
+        <div class="alert alert-danger" *ngIf="passwordError">{{ passwordError }}</div>
+        <div class="alert alert-success" *ngIf="passwordSuccess">{{ passwordSuccess }}</div>
+
+        <button type="submit" class="btn btn-primary" [disabled]="passwordForm.invalid || isSavingPassword">
+          {{ isSavingPassword ? 'Updating...' : 'Update Password' }}
+        </button>
+      </form>
+    </section>
+
+    <section class="settings-card">
+      <h2>Notification Preferences</h2>
+
+      <div class="preference-row">
+        <div class="preference-info">
+          <span class="preference-label">Comments on my posts</span>
+          <span class="preference-desc">Get an email when someone comments on one of your posts</span>
+        </div>
+        <button
+          type="button"
+          class="toggle-switch"
+          [class.on]="emailOnComment"
+          [disabled]="isSavingPreferences"
+          (click)="toggleEmailOnComment()"
+          [attr.aria-pressed]="emailOnComment"
+          aria-label="Toggle email notifications for comments"
+        >
+          <span class="toggle-knob"></span>
+        </button>
+      </div>
+
+      <div class="preference-row">
+        <div class="preference-info">
+          <span class="preference-label">New followers</span>
+          <span class="preference-desc">Get an email when someone follows you</span>
+        </div>
+        <button
+          type="button"
+          class="toggle-switch"
+          [class.on]="emailOnFollow"
+          [disabled]="isSavingPreferences"
+          (click)="toggleEmailOnFollow()"
+          [attr.aria-pressed]="emailOnFollow"
+          aria-label="Toggle email notifications for new followers"
+        >
+          <span class="toggle-knob"></span>
+        </button>
+      </div>
+
+      <div class="alert alert-danger" *ngIf="preferencesError">{{ preferencesError }}</div>
+      <span class="save-indicator" *ngIf="preferencesSuccess">✓ {{ preferencesSuccess }}</span>
+    </section>
+  </div>
+</div>

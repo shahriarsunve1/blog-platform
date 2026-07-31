@@ -304,11 +304,19 @@ public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
     private readonly IFollowService _followService;
+    private readonly IValidator<UpdateProfileDto> _updateProfileValidator;
+    private readonly IValidator<ChangePasswordDto> _changePasswordValidator;
 
-    public UsersController(IUserService userService, IFollowService followService)
+    public UsersController(
+        IUserService userService,
+        IFollowService followService,
+        IValidator<UpdateProfileDto> updateProfileValidator,
+        IValidator<ChangePasswordDto> changePasswordValidator)
     {
         _userService = userService;
         _followService = followService;
+        _updateProfileValidator = updateProfileValidator;
+        _changePasswordValidator = changePasswordValidator;
     }
 
     /// <summary>
@@ -365,6 +373,57 @@ public class UsersController : ControllerBase
     {
         var followerCount = await _followService.UnfollowAsync(CurrentUserId!.Value, id);
         return Ok(ApiResponse<int>.Ok(followerCount, "Unfollowed"));
+    }
+
+    /// <summary>
+    /// Update the current user's basic profile info
+    /// </summary>
+    [Authorize]
+    [HttpPut("me")]
+    public async Task<ActionResult<ApiResponse<UserDto>>> UpdateProfile(UpdateProfileDto request)
+    {
+        await _updateProfileValidator.ValidateAndThrowAsync(request);
+
+        try
+        {
+            var result = await _userService.UpdateProfileAsync(CurrentUserId!.Value, request);
+            return Ok(ApiResponse<UserDto>.Ok(result, "Profile updated"));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse<UserDto>.Fail(ex.Message, 400));
+        }
+    }
+
+    /// <summary>
+    /// Change the current user's password
+    /// </summary>
+    [Authorize]
+    [HttpPut("me/password")]
+    public async Task<ActionResult<ApiResponse<object>>> ChangePassword(ChangePasswordDto request)
+    {
+        await _changePasswordValidator.ValidateAndThrowAsync(request);
+
+        try
+        {
+            await _userService.ChangePasswordAsync(CurrentUserId!.Value, request);
+            return Ok(ApiResponse<object>.Ok(new { }, "Password updated"));
+        }
+        catch (UnauthorizedException ex)
+        {
+            return StatusCode(403, ApiResponse<object>.Fail(ex.Message, 403));
+        }
+    }
+
+    /// <summary>
+    /// Update the current user's notification preferences
+    /// </summary>
+    [Authorize]
+    [HttpPut("me/preferences")]
+    public async Task<ActionResult<ApiResponse<UserDto>>> UpdatePreferences(UpdatePreferencesDto request)
+    {
+        var result = await _userService.UpdatePreferencesAsync(CurrentUserId!.Value, request);
+        return Ok(ApiResponse<UserDto>.Ok(result, "Preferences updated"));
     }
 }
 

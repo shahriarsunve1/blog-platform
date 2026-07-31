@@ -9,10 +9,30 @@ export interface User {
   lastName: string;
   bio: string;
   avatar: string;
+  emailOnComment?: boolean;
+  emailOnFollow?: boolean;
   role: string;
   createdAt: string;
   followerCount?: number;
   isFollowedByCurrentUser?: boolean;
+}
+
+export interface UpdateProfileRequest {
+  username: string;
+  firstName: string;
+  lastName: string;
+  bio: string;
+  avatar: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface UpdatePreferencesRequest {
+  emailOnComment: boolean;
+  emailOnFollow: boolean;
 }
 
 export interface RegisterRequest {

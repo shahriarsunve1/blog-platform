@@ -15,6 +15,8 @@ public class User
     public string LastName { get; set; } = string.Empty;
     public string Bio { get; set; } = string.Empty;
     public string Avatar { get; set; } = string.Empty;
+    public bool EmailOnComment { get; set; } = true;
+    public bool EmailOnFollow { get; set; } = true;
     public UserRole Role { get; set; } = UserRole.User;
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

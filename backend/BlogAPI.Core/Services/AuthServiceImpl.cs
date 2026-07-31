@@ -41,7 +41,7 @@ public class AuthServiceImpl : IAuthService
             Email = request.Email,
             FirstName = request.FirstName,
             LastName = request.LastName,
-            PasswordHash = HashPassword(request.Password),
+            PasswordHash = PasswordHasher.Hash(request.Password),
             Role = UserRole.User,
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
@@ -57,7 +57,7 @@ public class AuthServiceImpl : IAuthService
     {
         var user = await _userRepository.GetByEmailAsync(request.Email);
 
-        if (user == null || !VerifyPassword(request.Password, user.PasswordHash))
+        if (user == null || !PasswordHasher.Verify(request.Password, user.PasswordHash))
         {
             throw new UnauthorizedException("Invalid email or password");
         }
@@ -239,21 +239,4 @@ public class AuthServiceImpl : IAuthService
         return Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken)));
     }
 
-    private string HashPassword(string password)
-    {
-        return BCrypt.Net.BCrypt.HashPassword(password);
-    }
-
-    private bool VerifyPassword(string password, string hash)
-    {
-        try
-        {
-            return BCrypt.Net.BCrypt.Verify(password, hash);
-        }
-        catch (BCrypt.Net.SaltParseException)
-        {
-            // Hash predates the BCrypt migration (or is otherwise malformed) - treat as invalid credentials.
-            return false;
-        }
-    }
 }

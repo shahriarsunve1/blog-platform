@@ -71,7 +71,7 @@ public class CommentService : ICommentService
             return;
 
         var author = await _userRepository.GetByIdAsync(post.UserId);
-        if (author == null)
+        if (author == null || !author.EmailOnComment)
             return;
 
         var baseUrl = _configuration["Frontend:BaseUrl"] ?? "";

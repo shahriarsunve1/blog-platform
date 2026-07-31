@@ -39,6 +39,9 @@ public interface IUserService
     Task<UserDto> GetUserByIdAsync(Guid userId, Guid? currentUserId = null);
     Task<UserDto> GetUserByEmailAsync(string email);
     Task<bool> UserExistsAsync(string email);
+    Task<UserDto> UpdateProfileAsync(Guid userId, UpdateProfileDto dto);
+    Task ChangePasswordAsync(Guid userId, ChangePasswordDto dto);
+    Task<UserDto> UpdatePreferencesAsync(Guid userId, UpdatePreferencesDto dto);
 }
 
 /// <summary>

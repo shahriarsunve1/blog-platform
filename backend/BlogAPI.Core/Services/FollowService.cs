@@ -49,6 +49,9 @@ public class FollowService : IFollowService
 
     private async Task NotifyNewFollowerAsync(Guid followerId, User target)
     {
+        if (!target.EmailOnFollow)
+            return;
+
         var follower = await _userRepository.GetByIdAsync(followerId);
         if (follower == null)
             return;

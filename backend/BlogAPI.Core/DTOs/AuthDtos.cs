@@ -33,6 +33,8 @@ public class UserDto
     public string LastName { get; set; } = string.Empty;
     public string Bio { get; set; } = string.Empty;
     public string Avatar { get; set; } = string.Empty;
+    public bool EmailOnComment { get; set; }
+    public bool EmailOnFollow { get; set; }
     public string Role { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public int FollowerCount { get; set; }

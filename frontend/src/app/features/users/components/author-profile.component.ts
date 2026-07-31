@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { UserService } from '../services/user.service';
 import { PostService } from '../../posts/services/post.service';
@@ -12,7 +12,7 @@ import { PostCardComponent } from '../../posts/components/post-card.component';
   templateUrl: './author-profile.component.html',
   styleUrls: ['./author-profile.component.scss'],
   standalone: true,
-  imports: [CommonModule, PostCardComponent]
+  imports: [CommonModule, RouterModule, PostCardComponent]
 })
 export class AuthorProfileComponent implements OnInit {
   author: User | null = null;

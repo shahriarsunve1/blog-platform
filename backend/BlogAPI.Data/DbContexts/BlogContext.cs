@@ -39,6 +39,12 @@ public class BlogContext : DbContext
             .WithOne(p => p.Author)
             .HasForeignKey(p => p.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<User>()
+            .Property(u => u.EmailOnComment)
+            .HasDefaultValue(true);
+        modelBuilder.Entity<User>()
+            .Property(u => u.EmailOnFollow)
+            .HasDefaultValue(true);
 
         // Post configuration
         modelBuilder.Entity<Post>()

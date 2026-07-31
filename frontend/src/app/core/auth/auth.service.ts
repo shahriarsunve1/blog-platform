@@ -90,6 +90,14 @@ export class AuthService {
   }
 
   /**
+   * Refresh the cached current-user snapshot (e.g. after a profile edit)
+   */
+  updateCurrentUser(user: User): void {
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    this.currentUserSubject.next(user);
+  }
+
+  /**
    * Load stored user from localStorage
    */
   private loadStoredUser(): void {

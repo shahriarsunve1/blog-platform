@@ -1,10 +1,19 @@
 <div class="author-profile" *ngIf="!isLoading && author">
   <div class="author-header">
-    <div class="author-info">
-      <h1>{{ author.firstName }} {{ author.lastName }}</h1>
-      <p class="author-bio" *ngIf="author.bio">{{ author.bio }}</p>
-      <p class="follower-count">{{ author.followerCount ?? 0 }} follower{{ (author.followerCount ?? 0) === 1 ? '' : 's' }}</p>
+    <div class="author-identity">
+      <div class="author-avatar">
+        <img *ngIf="author.avatar" [src]="author.avatar" alt="{{ author.firstName }} {{ author.lastName }}" />
+        <span *ngIf="!author.avatar" class="avatar-placeholder">{{ author.firstName[0] }}{{ author.lastName[0] }}</span>
+      </div>
+
+      <div class="author-info">
+        <h1>{{ author.firstName }} {{ author.lastName }}</h1>
+        <p class="author-bio" *ngIf="author.bio">{{ author.bio }}</p>
+        <p class="follower-count">{{ author.followerCount ?? 0 }} follower{{ (author.followerCount ?? 0) === 1 ? '' : 's' }}</p>
+      </div>
     </div>
+
+    <a class="edit-profile-btn" *ngIf="isOwnProfile" routerLink="/profile">Edit Profile</a>
 
     <button
       class="follow-btn"
