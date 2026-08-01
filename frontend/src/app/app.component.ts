@@ -12,6 +12,7 @@ import { AuthService } from './core/auth/auth.service';
 })
 export class AppComponent {
   mobileMenuOpen = false;
+  currentYear = new Date().getFullYear();
 
   constructor(public authService: AuthService) {}
 

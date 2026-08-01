@@ -117,6 +117,28 @@
   }
 }
 
+.app-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  padding: 28px 24px;
+  margin-top: 40px;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-faint);
+  font-size: 13px;
+
+  a {
+    color: var(--color-text-faint);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--color-accent);
+      text-decoration: underline;
+    }
+  }
+}
+
 .nav-toggle {
   display: none;
   background: none;

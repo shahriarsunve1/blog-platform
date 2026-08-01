@@ -7,7 +7,7 @@ const path = require('path');
 
 const API_URL = 'https://blogapi-backend-ncul.onrender.com/api/posts?pageNumber=1&pageSize=5000';
 const OUTPUT_FILE = path.join(__dirname, '..', 'routes.txt');
-const STATIC_ROUTES = ['/posts'];
+const STATIC_ROUTES = ['/posts', '/privacy'];
 
 https.get(API_URL, res => {
   let body = '';
