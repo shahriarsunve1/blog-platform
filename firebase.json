@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "public": "frontend/dist/blog-frontend",
+    "public": "frontend/dist/blog-frontend/browser",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {

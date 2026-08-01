@@ -19,6 +19,9 @@ npm-debug.log*
 .firebase/
 firebase-debug.log
 
+# Generated at build/deploy time
+frontend/routes.txt
+
 # OS/editor
 .vs/
 .vscode/*

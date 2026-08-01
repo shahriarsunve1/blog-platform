@@ -1,10 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
+import { Meta, Title } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { PostService } from '../services/post.service';
 import { CommentService } from '../services/comment.service';
 import { AuthService } from '../../../core/auth/auth.service';
+import { environment } from '../../../../environments/environment';
 import { Comment, Post } from '../../../shared/models/models';
 
 @Component({
@@ -34,7 +36,10 @@ export class PostDetailComponent implements OnInit {
     private commentService: CommentService,
     private authService: AuthService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private titleService: Title,
+    private metaService: Meta,
+    @Inject(DOCUMENT) private document: Document
   ) {}
 
   ngOnInit(): void {
@@ -55,6 +60,7 @@ export class PostDetailComponent implements OnInit {
         if (response.data) {
           this.post = response.data;
           this.isAuthor = response.data.userId === this.currentUserId;
+          this.updateMetaTags(response.data);
         }
         this.isLoading = false;
       },
@@ -64,6 +70,44 @@ export class PostDetailComponent implements OnInit {
         this.router.navigate(['/posts']);
       }
     });
+  }
+
+  /**
+   * Sets the document title and social/SEO meta tags for this post. Baked
+   * into the static HTML at build time via prerendering, so shared links and
+   * search crawlers see the real title/description/image instead of the
+   * generic app shell.
+   */
+  private updateMetaTags(post: Post): void {
+    const pageTitle = `${post.title} | Resonate`;
+    const postUrl = `${environment.frontendBaseUrl}/posts/${post.id}`;
+
+    this.titleService.setTitle(pageTitle);
+
+    this.metaService.updateTag({ name: 'description', content: post.excerpt });
+    this.metaService.updateTag({ property: 'og:type', content: 'article' });
+    this.metaService.updateTag({ property: 'og:title', content: post.title });
+    this.metaService.updateTag({ property: 'og:description', content: post.excerpt });
+    this.metaService.updateTag({ property: 'og:url', content: postUrl });
+    this.metaService.updateTag({
+      name: 'twitter:card',
+      content: post.coverImageUrl ? 'summary_large_image' : 'summary'
+    });
+    this.metaService.updateTag({ name: 'twitter:title', content: post.title });
+    this.metaService.updateTag({ name: 'twitter:description', content: post.excerpt });
+
+    if (post.coverImageUrl) {
+      this.metaService.updateTag({ property: 'og:image', content: post.coverImageUrl });
+      this.metaService.updateTag({ name: 'twitter:image', content: post.coverImageUrl });
+    }
+
+    let canonical = this.document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = this.document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      this.document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', postUrl);
   }
 
   loadComments(postId: string): void {
