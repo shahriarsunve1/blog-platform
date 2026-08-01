@@ -19,14 +19,16 @@ public class AuthServiceImpl : IAuthService
 {
     private readonly IUserRepository _userRepository;
     private readonly IConfiguration _configuration;
+    private readonly IEmailService _emailService;
 
-    public AuthServiceImpl(IUserRepository userRepository, IConfiguration configuration)
+    public AuthServiceImpl(IUserRepository userRepository, IConfiguration configuration, IEmailService emailService)
     {
         _userRepository = userRepository;
         _configuration = configuration;
+        _emailService = emailService;
     }
 
-    public async Task<AuthResponseDto> RegisterAsync(RegisterUserDto request)
+    public async Task<RegisterResultDto> RegisterAsync(RegisterUserDto request)
     {
         // Check if email already exists
         if (await _userRepository.EmailExistsAsync(request.Email))
@@ -34,7 +36,9 @@ public class AuthServiceImpl : IAuthService
             throw new InvalidOperationException("Email already registered");
         }
 
-        // Create new user
+        var verificationToken = GenerateEmailVerificationToken();
+
+        // Create new user - inactive until they click the emailed verification link
         var user = new User
         {
             Username = request.Email.Split('@')[0],
@@ -44,13 +48,21 @@ public class AuthServiceImpl : IAuthService
             PasswordHash = PasswordHasher.Hash(request.Password),
             Role = UserRole.User,
             IsActive = true,
+            EmailVerified = false,
+            EmailVerificationTokenHash = HashEmailVerificationToken(verificationToken),
+            EmailVerificationTokenExpiresAt = DateTime.UtcNow.AddHours(24),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
         var createdUser = await _userRepository.AddAsync(user);
 
-        return await IssueTokensAsync(createdUser);
+        await SendVerificationEmailAsync(createdUser, verificationToken);
+
+        return new RegisterResultDto
+        {
+            Message = "Registration successful! Check your email to verify your account before logging in."
+        };
     }
 
     public async Task<AuthResponseDto> LoginAsync(LoginUserDto request)
@@ -67,7 +79,74 @@ public class AuthServiceImpl : IAuthService
             throw new UnauthorizedException("User account is inactive");
         }
 
+        if (!user.EmailVerified)
+        {
+            throw new UnauthorizedException("Please verify your email before logging in");
+        }
+
         return await IssueTokensAsync(user);
+    }
+
+    public async Task VerifyEmailAsync(string token)
+    {
+        var tokenHash = HashEmailVerificationToken(token);
+        var user = await _userRepository.GetByEmailVerificationTokenHashAsync(tokenHash);
+
+        if (user == null ||
+            user.EmailVerificationTokenExpiresAt == null ||
+            user.EmailVerificationTokenExpiresAt < DateTime.UtcNow)
+        {
+            throw new UnauthorizedException("This verification link is invalid or has expired");
+        }
+
+        user.EmailVerified = true;
+        user.EmailVerificationTokenHash = null;
+        user.EmailVerificationTokenExpiresAt = null;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _userRepository.UpdateAsync(user);
+    }
+
+    public async Task ResendVerificationEmailAsync(string email)
+    {
+        var user = await _userRepository.GetByEmailAsync(email);
+
+        // Silently no-op if there's nothing to do - avoids leaking whether an
+        // email is registered or already verified.
+        if (user == null || user.EmailVerified)
+        {
+            return;
+        }
+
+        var verificationToken = GenerateEmailVerificationToken();
+        user.EmailVerificationTokenHash = HashEmailVerificationToken(verificationToken);
+        user.EmailVerificationTokenExpiresAt = DateTime.UtcNow.AddHours(24);
+        await _userRepository.UpdateAsync(user);
+
+        await SendVerificationEmailAsync(user, verificationToken);
+    }
+
+    private async Task SendVerificationEmailAsync(User user, string verificationToken)
+    {
+        var baseUrl = (_configuration["Frontend:BaseUrl"] ?? "").TrimEnd('/');
+        var link = $"{baseUrl}/auth/verify-email?token={Uri.EscapeDataString(verificationToken)}";
+        var html = $"<p>Welcome to Resonate! Please verify your email address to activate your account.</p>"
+            + $"<p><a href=\"{link}\">Verify my email</a></p>"
+            + $"<p>This link expires in 24 hours. If you didn't create this account, you can ignore this email.</p>";
+
+        await _emailService.SendEmailAsync(user.Email, "Verify your Resonate account", html);
+    }
+
+    private string GenerateEmailVerificationToken()
+    {
+        var randomNumber = new byte[32];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(randomNumber);
+        return Convert.ToBase64String(randomNumber).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+    }
+
+    private static string HashEmailVerificationToken(string token)
+    {
+        return Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
     }
 
     public async Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenRequestDto request)

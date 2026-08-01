@@ -45,6 +45,14 @@ public class BlogContext : DbContext
         modelBuilder.Entity<User>()
             .Property(u => u.EmailOnFollow)
             .HasDefaultValue(true);
+        // ValueGeneratedNever forces EF to always send this column explicitly on
+        // insert - without it, EF omits properties left at their CLR default (false
+        // for bool) and lets the DB's HasDefaultValue(true) apply instead, which
+        // silently flips brand-new unverified registrations back to verified.
+        modelBuilder.Entity<User>()
+            .Property(u => u.EmailVerified)
+            .HasDefaultValue(true)
+            .ValueGeneratedNever();
 
         // Post configuration
         modelBuilder.Entity<Post>()

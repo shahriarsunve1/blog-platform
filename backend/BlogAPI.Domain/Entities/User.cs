@@ -19,11 +19,17 @@ public class User
     public bool EmailOnFollow { get; set; } = true;
     public UserRole Role { get; set; } = UserRole.User;
     public bool IsActive { get; set; } = true;
+    // Defaults to true so existing/seed users aren't locked out - registration
+    // explicitly sets this false and only flips it once the link is clicked.
+    public bool EmailVerified { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     public string? RefreshTokenHash { get; set; }
     public DateTime? RefreshTokenExpiresAt { get; set; }
+
+    public string? EmailVerificationTokenHash { get; set; }
+    public DateTime? EmailVerificationTokenExpiresAt { get; set; }
 
     // Navigation properties
     public ICollection<Post> Posts { get; set; } = new List<Post>();

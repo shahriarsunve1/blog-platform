@@ -13,6 +13,7 @@ namespace BlogAPI.Tests;
 public class AuthServiceImplTests
 {
     private readonly Mock<IUserRepository> _userRepository = new();
+    private readonly Mock<IEmailService> _emailService = new();
     private readonly AuthServiceImpl _sut;
 
     public AuthServiceImplTests()
@@ -27,15 +28,16 @@ public class AuthServiceImplTests
             })
             .Build();
 
-        _sut = new AuthServiceImpl(_userRepository.Object, configuration);
+        _sut = new AuthServiceImpl(_userRepository.Object, configuration, _emailService.Object);
     }
 
     [Fact]
-    public async Task RegisterAsync_NewEmail_CreatesUserAndReturnsToken()
+    public async Task RegisterAsync_NewEmail_CreatesUnverifiedUserAndSendsVerificationEmail()
     {
+        User? capturedUser = null;
         _userRepository.Setup(r => r.EmailExistsAsync("new@example.com")).ReturnsAsync(false);
         _userRepository.Setup(r => r.AddAsync(It.IsAny<User>()))
-            .ReturnsAsync((User u) => { u.Id = Guid.NewGuid(); return u; });
+            .ReturnsAsync((User u) => { capturedUser = u; u.Id = Guid.NewGuid(); return u; });
 
         var result = await _sut.RegisterAsync(new RegisterUserDto
         {
@@ -45,9 +47,12 @@ public class AuthServiceImplTests
             LastName = "User"
         });
 
-        Assert.NotEmpty(result.AccessToken);
-        Assert.NotEmpty(result.RefreshToken);
-        Assert.Equal("new@example.com", result.User.Email);
+        Assert.NotEmpty(result.Message);
+        Assert.NotNull(capturedUser);
+        Assert.False(capturedUser!.EmailVerified);
+        Assert.NotNull(capturedUser.EmailVerificationTokenHash);
+        Assert.NotNull(capturedUser.EmailVerificationTokenExpiresAt);
+        _emailService.Verify(e => e.SendEmailAsync("new@example.com", It.IsAny<string>(), It.IsAny<string>()), Times.Once);
     }
 
     [Fact]
@@ -142,6 +147,119 @@ public class AuthServiceImplTests
 
         await Assert.ThrowsAsync<UnauthorizedException>(() =>
             _sut.LoginAsync(new LoginUserDto { Email = "user@example.com", Password = "password123" }));
+    }
+
+    [Fact]
+    public async Task LoginAsync_UnverifiedEmail_ThrowsUnauthorized()
+    {
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "unverified@example.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
+            IsActive = true,
+            EmailVerified = false
+        };
+        _userRepository.Setup(r => r.GetByEmailAsync("unverified@example.com")).ReturnsAsync(user);
+
+        await Assert.ThrowsAsync<UnauthorizedException>(() =>
+            _sut.LoginAsync(new LoginUserDto { Email = "unverified@example.com", Password = "password123" }));
+    }
+
+    [Fact]
+    public async Task VerifyEmailAsync_ValidToken_MarksUserVerifiedAndClearsToken()
+    {
+        User? capturedUser = null;
+        _userRepository.Setup(r => r.EmailExistsAsync(It.IsAny<string>())).ReturnsAsync(false);
+        _userRepository.Setup(r => r.AddAsync(It.IsAny<User>()))
+            .ReturnsAsync((User u) => { capturedUser = u; u.Id = Guid.NewGuid(); return u; });
+
+        string? sentHtml = null;
+        _emailService.Setup(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Callback<string, string, string>((_, _, html) => sentHtml = html)
+            .Returns(Task.CompletedTask);
+
+        await _sut.RegisterAsync(new RegisterUserDto
+        {
+            Email = "new@example.com",
+            Password = "password123",
+            FirstName = "New",
+            LastName = "User"
+        });
+
+        var token = ExtractTokenFromEmailLink(sentHtml!);
+        _userRepository.Setup(r => r.GetByEmailVerificationTokenHashAsync(It.IsAny<string>()))
+            .ReturnsAsync(capturedUser);
+
+        await _sut.VerifyEmailAsync(token);
+
+        Assert.True(capturedUser!.EmailVerified);
+        Assert.Null(capturedUser.EmailVerificationTokenHash);
+        Assert.Null(capturedUser.EmailVerificationTokenExpiresAt);
+    }
+
+    [Fact]
+    public async Task VerifyEmailAsync_UnknownToken_ThrowsUnauthorized()
+    {
+        _userRepository.Setup(r => r.GetByEmailVerificationTokenHashAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
+
+        await Assert.ThrowsAsync<UnauthorizedException>(() => _sut.VerifyEmailAsync("bogus-token"));
+    }
+
+    [Fact]
+    public async Task VerifyEmailAsync_ExpiredToken_ThrowsUnauthorized()
+    {
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "user@example.com",
+            EmailVerified = false,
+            EmailVerificationTokenHash = "some-hash",
+            EmailVerificationTokenExpiresAt = DateTime.UtcNow.AddHours(-1)
+        };
+        _userRepository.Setup(r => r.GetByEmailVerificationTokenHashAsync(It.IsAny<string>())).ReturnsAsync(user);
+
+        await Assert.ThrowsAsync<UnauthorizedException>(() => _sut.VerifyEmailAsync("expired-token"));
+    }
+
+    [Fact]
+    public async Task ResendVerificationEmailAsync_AlreadyVerifiedUser_DoesNotSendEmail()
+    {
+        var user = new User { Id = Guid.NewGuid(), Email = "user@example.com", EmailVerified = true };
+        _userRepository.Setup(r => r.GetByEmailAsync("user@example.com")).ReturnsAsync(user);
+
+        await _sut.ResendVerificationEmailAsync("user@example.com");
+
+        _emailService.Verify(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ResendVerificationEmailAsync_UnknownEmail_DoesNotThrowOrSendEmail()
+    {
+        _userRepository.Setup(r => r.GetByEmailAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
+
+        await _sut.ResendVerificationEmailAsync("nobody@example.com");
+
+        _emailService.Verify(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ResendVerificationEmailAsync_UnverifiedUser_SendsNewVerificationEmail()
+    {
+        var user = new User { Id = Guid.NewGuid(), Email = "user@example.com", EmailVerified = false };
+        _userRepository.Setup(r => r.GetByEmailAsync("user@example.com")).ReturnsAsync(user);
+
+        await _sut.ResendVerificationEmailAsync("user@example.com");
+
+        _emailService.Verify(e => e.SendEmailAsync("user@example.com", It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+    }
+
+    private static string ExtractTokenFromEmailLink(string html)
+    {
+        var marker = "token=";
+        var start = html.IndexOf(marker, StringComparison.Ordinal) + marker.Length;
+        var end = html.IndexOf('"', start);
+        return Uri.UnescapeDataString(html[start..end]);
     }
 
     [Fact]

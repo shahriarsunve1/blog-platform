@@ -8,12 +8,14 @@ namespace BlogAPI.Core.Services;
 /// </summary>
 public interface IAuthService
 {
-    Task<AuthResponseDto> RegisterAsync(RegisterUserDto dto);
+    Task<RegisterResultDto> RegisterAsync(RegisterUserDto dto);
     Task<AuthResponseDto> LoginAsync(LoginUserDto dto);
     Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenRequestDto dto);
     Task<string> GenerateAccessTokenAsync(Guid userId);
     Task<string> GenerateRefreshTokenAsync(Guid userId);
     Task<bool> ValidateTokenAsync(string token);
+    Task VerifyEmailAsync(string token);
+    Task ResendVerificationEmailAsync(string email);
 }
 
 /// <summary>

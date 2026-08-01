@@ -90,6 +90,11 @@ public class UserRepository : GenericRepository<User>, IUserRepository
             .Take(count)
             .ToListAsync();
     }
+
+    public async Task<User?> GetByEmailVerificationTokenHashAsync(string tokenHash)
+    {
+        return await _context.Users.FirstOrDefaultAsync(u => u.EmailVerificationTokenHash == tokenHash);
+    }
 }
 
 /// <summary>

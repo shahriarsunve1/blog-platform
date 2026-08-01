@@ -31,3 +31,19 @@ public class RefreshTokenRequestDtoValidator : AbstractValidator<RefreshTokenReq
         RuleFor(x => x.RefreshToken).NotEmpty();
     }
 }
+
+public class VerifyEmailDtoValidator : AbstractValidator<VerifyEmailDto>
+{
+    public VerifyEmailDtoValidator()
+    {
+        RuleFor(x => x.Token).NotEmpty();
+    }
+}
+
+public class ResendVerificationDtoValidator : AbstractValidator<ResendVerificationDto>
+{
+    public ResendVerificationDtoValidator()
+    {
+        RuleFor(x => x.Email).NotEmpty().EmailAddress();
+    }
+}

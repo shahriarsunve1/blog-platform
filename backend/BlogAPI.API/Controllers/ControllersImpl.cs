@@ -19,37 +19,76 @@ public class AuthController : ControllerBase
     private readonly IValidator<RegisterUserDto> _registerValidator;
     private readonly IValidator<LoginUserDto> _loginValidator;
     private readonly IValidator<RefreshTokenRequestDto> _refreshValidator;
+    private readonly IValidator<VerifyEmailDto> _verifyEmailValidator;
+    private readonly IValidator<ResendVerificationDto> _resendVerificationValidator;
 
     public AuthController(
         IAuthService authService,
         IValidator<RegisterUserDto> registerValidator,
         IValidator<LoginUserDto> loginValidator,
-        IValidator<RefreshTokenRequestDto> refreshValidator)
+        IValidator<RefreshTokenRequestDto> refreshValidator,
+        IValidator<VerifyEmailDto> verifyEmailValidator,
+        IValidator<ResendVerificationDto> resendVerificationValidator)
     {
         _authService = authService;
         _registerValidator = registerValidator;
         _loginValidator = loginValidator;
         _refreshValidator = refreshValidator;
+        _verifyEmailValidator = verifyEmailValidator;
+        _resendVerificationValidator = resendVerificationValidator;
     }
 
     /// <summary>
-    /// Register a new user
+    /// Register a new user (inactive until they verify their email)
     /// </summary>
     [EnableRateLimiting("auth")]
     [HttpPost("register")]
-    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Register(RegisterUserDto request)
+    public async Task<ActionResult<ApiResponse<RegisterResultDto>>> Register(RegisterUserDto request)
     {
         await _registerValidator.ValidateAndThrowAsync(request);
 
         try
         {
             var result = await _authService.RegisterAsync(request);
-            return Ok(ApiResponse<AuthResponseDto>.Ok(result, "Registration successful"));
+            return Ok(ApiResponse<RegisterResultDto>.Ok(result, "Registration successful"));
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(ApiResponse<AuthResponseDto>.Fail(ex.Message, 400));
+            return BadRequest(ApiResponse<RegisterResultDto>.Fail(ex.Message, 400));
         }
+    }
+
+    /// <summary>
+    /// Confirm an emailed verification link
+    /// </summary>
+    [EnableRateLimiting("auth")]
+    [HttpPost("verify-email")]
+    public async Task<ActionResult<ApiResponse<object>>> VerifyEmail(VerifyEmailDto request)
+    {
+        await _verifyEmailValidator.ValidateAndThrowAsync(request);
+
+        try
+        {
+            await _authService.VerifyEmailAsync(request.Token);
+            return Ok(ApiResponse<object>.Ok(new { }, "Email verified successfully"));
+        }
+        catch (UnauthorizedException ex)
+        {
+            return BadRequest(ApiResponse<object>.Fail(ex.Message, 400));
+        }
+    }
+
+    /// <summary>
+    /// Request a new verification email (e.g. the old link expired)
+    /// </summary>
+    [EnableRateLimiting("auth")]
+    [HttpPost("resend-verification")]
+    public async Task<ActionResult<ApiResponse<object>>> ResendVerification(ResendVerificationDto request)
+    {
+        await _resendVerificationValidator.ValidateAndThrowAsync(request);
+
+        await _authService.ResendVerificationEmailAsync(request.Email);
+        return Ok(ApiResponse<object>.Ok(new { }, "If an account with that email exists, a verification link has been sent."));
     }
 
     /// <summary>

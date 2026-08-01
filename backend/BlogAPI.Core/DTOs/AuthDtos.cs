@@ -60,3 +60,28 @@ public class RefreshTokenRequestDto
     public string AccessToken { get; set; } = string.Empty;
     public string RefreshToken { get; set; } = string.Empty;
 }
+
+/// <summary>
+/// DTO for the response returned right after registration - no tokens,
+/// since the account isn't usable until the email is verified.
+/// </summary>
+public class RegisterResultDto
+{
+    public string Message { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// DTO for confirming an emailed verification link
+/// </summary>
+public class VerifyEmailDto
+{
+    public string Token { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// DTO for requesting a new verification email
+/// </summary>
+public class ResendVerificationDto
+{
+    public string Email { get; set; } = string.Empty;
+}
