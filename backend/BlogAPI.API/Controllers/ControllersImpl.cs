@@ -185,6 +185,33 @@ public class PostsController : ControllerBase
     }
 
     /// <summary>
+    /// XML sitemap of every published post, for search engine discovery
+    /// </summary>
+    [HttpGet("sitemap.xml")]
+    public async Task<IActionResult> Sitemap()
+    {
+        var result = await _postService.GetPublishedPostsAsync(1, 5000);
+        var baseUrl = (_configuration["Frontend:BaseUrl"] ?? "").TrimEnd('/');
+
+        XNamespace ns = "http://www.sitemaps.org/schemas/sitemap/0.9";
+
+        var homeUrl = new XElement(ns + "url",
+            new XElement(ns + "loc", $"{baseUrl}/posts"),
+            new XElement(ns + "changefreq", "daily"));
+
+        var postUrls = result.Items.Select(post => new XElement(ns + "url",
+            new XElement(ns + "loc", $"{baseUrl}/posts/{post.Id}"),
+            new XElement(ns + "lastmod", post.UpdatedAt.ToString("yyyy-MM-dd")),
+            new XElement(ns + "changefreq", "weekly")));
+
+        var doc = new XDocument(
+            new XDeclaration("1.0", "utf-8", null),
+            new XElement(ns + "urlset", new[] { homeUrl }.Concat(postUrls)));
+
+        return Content(doc.Declaration + Environment.NewLine + doc.ToString(), "application/xml", Encoding.UTF8);
+    }
+
+    /// <summary>
     /// Get all of the current user's own posts, any status (draft/published/archived)
     /// </summary>
     [Authorize]
