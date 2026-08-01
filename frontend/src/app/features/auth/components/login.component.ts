@@ -15,6 +15,9 @@ export class LoginComponent implements OnInit {
   form!: FormGroup;
   isLoading = false;
   errorMessage = '';
+  showResendVerification = false;
+  isResending = false;
+  resendSent = false;
 
   constructor(
     private fb: FormBuilder,
@@ -39,6 +42,8 @@ export class LoginComponent implements OnInit {
 
     this.isLoading = true;
     this.errorMessage = '';
+    this.showResendVerification = false;
+    this.resendSent = false;
 
     this.authService.login(this.form.value).subscribe({
       next: () => {
@@ -46,7 +51,25 @@ export class LoginComponent implements OnInit {
       },
       error: (err) => {
         this.errorMessage = err.error?.message || 'Login failed';
+        this.showResendVerification = this.errorMessage.toLowerCase().includes('verify your email');
         this.isLoading = false;
+      }
+    });
+  }
+
+  resendVerification(): void {
+    const email = this.form.value.email;
+    if (!email) return;
+
+    this.isResending = true;
+    this.authService.resendVerification(email).subscribe({
+      next: () => {
+        this.isResending = false;
+        this.resendSent = true;
+      },
+      error: () => {
+        this.isResending = false;
+        this.resendSent = true;
       }
     });
   }

@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { User, LoginRequest, RegisterRequest, AuthResponse, ApiResponse } from '../../shared/models/models';
+import { User, LoginRequest, RegisterRequest, RegisterResult, AuthResponse, ApiResponse } from '../../shared/models/models';
 import { throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
@@ -26,12 +26,30 @@ export class AuthService {
   }
 
   /**
-   * Register new user
+   * Register new user. Doesn't log them in - the account stays inactive
+   * until they click the verification link emailed to them.
    */
-  register(request: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<ApiResponse<AuthResponse>>(`${this.apiUrl}/register`, request).pipe(
-      map(response => response.data!),
-      tap(data => this.storeAuthData(data))
+  register(request: RegisterRequest): Observable<RegisterResult> {
+    return this.http.post<ApiResponse<RegisterResult>>(`${this.apiUrl}/register`, request).pipe(
+      map(response => response.data!)
+    );
+  }
+
+  /**
+   * Confirm an emailed verification link
+   */
+  verifyEmail(token: string): Observable<void> {
+    return this.http.post<ApiResponse<object>>(`${this.apiUrl}/verify-email`, { token }).pipe(
+      map(() => undefined)
+    );
+  }
+
+  /**
+   * Request a new verification email
+   */
+  resendVerification(email: string): Observable<void> {
+    return this.http.post<ApiResponse<object>>(`${this.apiUrl}/resend-verification`, { email }).pipe(
+      map(() => undefined)
     );
   }
 

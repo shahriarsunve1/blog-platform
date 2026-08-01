@@ -1,7 +1,15 @@
 <div class="auth-container">
-  <div class="auth-card">
+  <div class="auth-card" *ngIf="registered">
+    <h2>Check your email</h2>
+    <div class="alert alert-success">{{ successMessage }}</div>
+    <div class="auth-toggle mt-3 text-center">
+      <p><a routerLink="/auth/login">Back to login</a></p>
+    </div>
+  </div>
+
+  <div class="auth-card" *ngIf="!registered">
     <h2>Register</h2>
-    
+
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
       <div class="name-row">
         <div class="form-group">

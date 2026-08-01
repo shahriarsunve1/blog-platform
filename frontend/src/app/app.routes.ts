@@ -18,6 +18,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/components/register.component').then(m => m.RegisterComponent)
   },
   {
+    path: 'auth/verify-email',
+    loadComponent: () => import('./features/auth/components/verify-email.component').then(m => m.VerifyEmailComponent)
+  },
+  {
     path: 'posts',
     loadComponent: () => import('./features/posts/components/post-list.component').then(m => m.PostListComponent)
   },

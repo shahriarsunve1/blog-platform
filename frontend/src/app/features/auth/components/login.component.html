@@ -36,9 +36,18 @@
 
       <div class="alert alert-danger" *ngIf="errorMessage">
         {{ errorMessage }}
+        <ng-container *ngIf="showResendVerification && !resendSent">
+          <br />
+          <button type="button" class="btn-link" [disabled]="isResending" (click)="resendVerification()">
+            {{ isResending ? 'Sending...' : 'Resend verification email' }}
+          </button>
+        </ng-container>
+        <span *ngIf="showResendVerification && resendSent">
+          <br />If an account with that email exists, a new verification link has been sent.
+        </span>
       </div>
 
-      <button 
+      <button
         type="submit" 
         class="btn btn-primary btn-block"
         [disabled]="form.invalid || isLoading"

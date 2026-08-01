@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { CommonModule } from '@angular/common';
 
@@ -15,11 +15,12 @@ export class RegisterComponent implements OnInit {
   form!: FormGroup;
   isLoading = false;
   errorMessage = '';
+  registered = false;
+  successMessage = '';
 
   constructor(
     private fb: FormBuilder,
-    private authService: AuthService,
-    private router: Router
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -56,8 +57,10 @@ export class RegisterComponent implements OnInit {
 
     const { firstName, lastName, email, password } = this.form.value;
     this.authService.register({ firstName, lastName, email, password }).subscribe({
-      next: () => {
-        this.router.navigate(['/posts']);
+      next: (result) => {
+        this.registered = true;
+        this.successMessage = result.message;
+        this.isLoading = false;
       },
       error: (err) => {
         this.errorMessage = err.error?.message || 'Registration failed';

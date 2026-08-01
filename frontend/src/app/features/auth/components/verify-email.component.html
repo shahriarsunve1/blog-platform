@@ -1,0 +1,25 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <ng-container [ngSwitch]="state">
+      <ng-container *ngSwitchCase="'verifying'">
+        <h2>Verifying your email&hellip;</h2>
+      </ng-container>
+
+      <ng-container *ngSwitchCase="'success'">
+        <h2>Email verified!</h2>
+        <div class="alert alert-success">Your account is active. You can log in now.</div>
+        <div class="auth-toggle mt-3 text-center">
+          <p><a routerLink="/auth/login">Go to login</a></p>
+        </div>
+      </ng-container>
+
+      <ng-container *ngSwitchCase="'error'">
+        <h2>Verification failed</h2>
+        <div class="alert alert-danger">{{ errorMessage }}</div>
+        <div class="auth-toggle mt-3 text-center">
+          <p><a routerLink="/auth/login">Back to login</a></p>
+        </div>
+      </ng-container>
+    </ng-container>
+  </div>
+</div>
