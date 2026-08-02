@@ -32,6 +32,9 @@
         <div class="invalid-feedback" *ngIf="isFieldInvalid('password')">
           Password is required
         </div>
+        <div class="forgot-password-link">
+          <a routerLink="/auth/forgot-password">Forgot password?</a>
+        </div>
       </div>
 
       <div class="alert alert-danger" *ngIf="errorMessage">

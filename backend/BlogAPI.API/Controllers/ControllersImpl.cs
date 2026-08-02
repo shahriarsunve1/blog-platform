@@ -21,6 +21,8 @@ public class AuthController : ControllerBase
     private readonly IValidator<RefreshTokenRequestDto> _refreshValidator;
     private readonly IValidator<VerifyEmailDto> _verifyEmailValidator;
     private readonly IValidator<ResendVerificationDto> _resendVerificationValidator;
+    private readonly IValidator<ForgotPasswordDto> _forgotPasswordValidator;
+    private readonly IValidator<ResetPasswordDto> _resetPasswordValidator;
 
     public AuthController(
         IAuthService authService,
@@ -28,7 +30,9 @@ public class AuthController : ControllerBase
         IValidator<LoginUserDto> loginValidator,
         IValidator<RefreshTokenRequestDto> refreshValidator,
         IValidator<VerifyEmailDto> verifyEmailValidator,
-        IValidator<ResendVerificationDto> resendVerificationValidator)
+        IValidator<ResendVerificationDto> resendVerificationValidator,
+        IValidator<ForgotPasswordDto> forgotPasswordValidator,
+        IValidator<ResetPasswordDto> resetPasswordValidator)
     {
         _authService = authService;
         _registerValidator = registerValidator;
@@ -36,6 +40,8 @@ public class AuthController : ControllerBase
         _refreshValidator = refreshValidator;
         _verifyEmailValidator = verifyEmailValidator;
         _resendVerificationValidator = resendVerificationValidator;
+        _forgotPasswordValidator = forgotPasswordValidator;
+        _resetPasswordValidator = resetPasswordValidator;
     }
 
     /// <summary>
@@ -89,6 +95,39 @@ public class AuthController : ControllerBase
 
         await _authService.ResendVerificationEmailAsync(request.Email);
         return Ok(ApiResponse<object>.Ok(new { }, "If an account with that email exists, a verification link has been sent."));
+    }
+
+    /// <summary>
+    /// Request a password reset email
+    /// </summary>
+    [EnableRateLimiting("auth")]
+    [HttpPost("forgot-password")]
+    public async Task<ActionResult<ApiResponse<object>>> ForgotPassword(ForgotPasswordDto request)
+    {
+        await _forgotPasswordValidator.ValidateAndThrowAsync(request);
+
+        await _authService.RequestPasswordResetAsync(request.Email);
+        return Ok(ApiResponse<object>.Ok(new { }, "If an account with that email exists, a password reset link has been sent."));
+    }
+
+    /// <summary>
+    /// Confirm an emailed password reset link with a new password
+    /// </summary>
+    [EnableRateLimiting("auth")]
+    [HttpPost("reset-password")]
+    public async Task<ActionResult<ApiResponse<object>>> ResetPassword(ResetPasswordDto request)
+    {
+        await _resetPasswordValidator.ValidateAndThrowAsync(request);
+
+        try
+        {
+            await _authService.ResetPasswordAsync(request.Token, request.NewPassword);
+            return Ok(ApiResponse<object>.Ok(new { }, "Your password has been reset. You can log in now."));
+        }
+        catch (UnauthorizedException ex)
+        {
+            return BadRequest(ApiResponse<object>.Fail(ex.Message, 400));
+        }
     }
 
     /// <summary>

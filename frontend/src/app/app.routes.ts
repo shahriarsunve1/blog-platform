@@ -22,6 +22,14 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/components/verify-email.component').then(m => m.VerifyEmailComponent)
   },
   {
+    path: 'auth/forgot-password',
+    loadComponent: () => import('./features/auth/components/forgot-password.component').then(m => m.ForgotPasswordComponent)
+  },
+  {
+    path: 'auth/reset-password',
+    loadComponent: () => import('./features/auth/components/reset-password.component').then(m => m.ResetPasswordComponent)
+  },
+  {
     path: 'posts',
     loadComponent: () => import('./features/posts/components/post-list.component').then(m => m.PostListComponent)
   },

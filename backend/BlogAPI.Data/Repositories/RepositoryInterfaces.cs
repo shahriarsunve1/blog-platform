@@ -27,6 +27,7 @@ public interface IUserRepository : IGenericRepository<User>
     Task<bool> EmailExistsAsync(string email);
     Task<List<User>> GetRecentAsync(int count);
     Task<User?> GetByEmailVerificationTokenHashAsync(string tokenHash);
+    Task<User?> GetByPasswordResetTokenHashAsync(string tokenHash);
 }
 
 /// <summary>

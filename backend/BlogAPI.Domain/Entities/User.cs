@@ -31,6 +31,9 @@ public class User
     public string? EmailVerificationTokenHash { get; set; }
     public DateTime? EmailVerificationTokenExpiresAt { get; set; }
 
+    public string? PasswordResetTokenHash { get; set; }
+    public DateTime? PasswordResetTokenExpiresAt { get; set; }
+
     // Navigation properties
     public ICollection<Post> Posts { get; set; } = new List<Post>();
 

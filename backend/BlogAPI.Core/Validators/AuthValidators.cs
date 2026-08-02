@@ -47,3 +47,20 @@ public class ResendVerificationDtoValidator : AbstractValidator<ResendVerificati
         RuleFor(x => x.Email).NotEmpty().EmailAddress();
     }
 }
+
+public class ForgotPasswordDtoValidator : AbstractValidator<ForgotPasswordDto>
+{
+    public ForgotPasswordDtoValidator()
+    {
+        RuleFor(x => x.Email).NotEmpty().EmailAddress();
+    }
+}
+
+public class ResetPasswordDtoValidator : AbstractValidator<ResetPasswordDto>
+{
+    public ResetPasswordDtoValidator()
+    {
+        RuleFor(x => x.Token).NotEmpty();
+        RuleFor(x => x.NewPassword).NotEmpty().MinimumLength(6);
+    }
+}

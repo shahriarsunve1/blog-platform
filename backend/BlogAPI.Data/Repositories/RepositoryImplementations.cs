@@ -95,6 +95,11 @@ public class UserRepository : GenericRepository<User>, IUserRepository
     {
         return await _context.Users.FirstOrDefaultAsync(u => u.EmailVerificationTokenHash == tokenHash);
     }
+
+    public async Task<User?> GetByPasswordResetTokenHashAsync(string tokenHash)
+    {
+        return await _context.Users.FirstOrDefaultAsync(u => u.PasswordResetTokenHash == tokenHash);
+    }
 }
 
 /// <summary>

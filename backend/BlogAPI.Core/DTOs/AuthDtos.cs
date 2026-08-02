@@ -85,3 +85,20 @@ public class ResendVerificationDto
 {
     public string Email { get; set; } = string.Empty;
 }
+
+/// <summary>
+/// DTO for requesting a password reset email
+/// </summary>
+public class ForgotPasswordDto
+{
+    public string Email { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// DTO for confirming an emailed password reset link with a new password
+/// </summary>
+public class ResetPasswordDto
+{
+    public string Token { get; set; } = string.Empty;
+    public string NewPassword { get; set; } = string.Empty;
+}

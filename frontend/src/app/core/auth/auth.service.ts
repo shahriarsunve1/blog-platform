@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { User, LoginRequest, RegisterRequest, RegisterResult, AuthResponse, ApiResponse } from '../../shared/models/models';
+import { User, LoginRequest, RegisterRequest, RegisterResult, AuthResponse, ApiResponse, ForgotPasswordRequest, ResetPasswordRequest } from '../../shared/models/models';
 import { throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
@@ -49,6 +49,24 @@ export class AuthService {
    */
   resendVerification(email: string): Observable<void> {
     return this.http.post<ApiResponse<object>>(`${this.apiUrl}/resend-verification`, { email }).pipe(
+      map(() => undefined)
+    );
+  }
+
+  /**
+   * Request a password reset email
+   */
+  forgotPassword(request: ForgotPasswordRequest): Observable<void> {
+    return this.http.post<ApiResponse<object>>(`${this.apiUrl}/forgot-password`, request).pipe(
+      map(() => undefined)
+    );
+  }
+
+  /**
+   * Confirm an emailed password reset link with a new password
+   */
+  resetPassword(request: ResetPasswordRequest): Observable<void> {
+    return this.http.post<ApiResponse<object>>(`${this.apiUrl}/reset-password`, request).pipe(
       map(() => undefined)
     );
   }

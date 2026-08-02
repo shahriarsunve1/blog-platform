@@ -36,7 +36,7 @@ public class AuthServiceImpl : IAuthService
             throw new InvalidOperationException("Email already registered");
         }
 
-        var verificationToken = GenerateEmailVerificationToken();
+        var verificationToken = GenerateSecureToken();
 
         // Create new user - inactive until they click the emailed verification link
         var user = new User
@@ -49,7 +49,7 @@ public class AuthServiceImpl : IAuthService
             Role = UserRole.User,
             IsActive = true,
             EmailVerified = false,
-            EmailVerificationTokenHash = HashEmailVerificationToken(verificationToken),
+            EmailVerificationTokenHash = HashToken(verificationToken),
             EmailVerificationTokenExpiresAt = DateTime.UtcNow.AddHours(24),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -89,7 +89,7 @@ public class AuthServiceImpl : IAuthService
 
     public async Task VerifyEmailAsync(string token)
     {
-        var tokenHash = HashEmailVerificationToken(token);
+        var tokenHash = HashToken(token);
         var user = await _userRepository.GetByEmailVerificationTokenHashAsync(tokenHash);
 
         if (user == null ||
@@ -117,12 +117,54 @@ public class AuthServiceImpl : IAuthService
             return;
         }
 
-        var verificationToken = GenerateEmailVerificationToken();
-        user.EmailVerificationTokenHash = HashEmailVerificationToken(verificationToken);
+        var verificationToken = GenerateSecureToken();
+        user.EmailVerificationTokenHash = HashToken(verificationToken);
         user.EmailVerificationTokenExpiresAt = DateTime.UtcNow.AddHours(24);
         await _userRepository.UpdateAsync(user);
 
         await SendVerificationEmailAsync(user, verificationToken);
+    }
+
+    public async Task RequestPasswordResetAsync(string email)
+    {
+        var user = await _userRepository.GetByEmailAsync(email);
+
+        // Silently no-op if there's no such account - avoids leaking whether an
+        // email is registered.
+        if (user == null)
+        {
+            return;
+        }
+
+        var resetToken = GenerateSecureToken();
+        user.PasswordResetTokenHash = HashToken(resetToken);
+        user.PasswordResetTokenExpiresAt = DateTime.UtcNow.AddHours(1);
+        await _userRepository.UpdateAsync(user);
+
+        await SendPasswordResetEmailAsync(user, resetToken);
+    }
+
+    public async Task ResetPasswordAsync(string token, string newPassword)
+    {
+        var tokenHash = HashToken(token);
+        var user = await _userRepository.GetByPasswordResetTokenHashAsync(tokenHash);
+
+        if (user == null ||
+            user.PasswordResetTokenExpiresAt == null ||
+            user.PasswordResetTokenExpiresAt < DateTime.UtcNow)
+        {
+            throw new UnauthorizedException("This password reset link is invalid or has expired");
+        }
+
+        user.PasswordHash = PasswordHasher.Hash(newPassword);
+        user.PasswordResetTokenHash = null;
+        user.PasswordResetTokenExpiresAt = null;
+        // Invalidate any existing session so a stolen refresh token stops working
+        // once the password is known to have been compromised/reset.
+        user.RefreshTokenHash = null;
+        user.RefreshTokenExpiresAt = null;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _userRepository.UpdateAsync(user);
     }
 
     private async Task SendVerificationEmailAsync(User user, string verificationToken)
@@ -136,7 +178,18 @@ public class AuthServiceImpl : IAuthService
         await _emailService.SendEmailAsync(user.Email, "Verify your Resonate account", html);
     }
 
-    private string GenerateEmailVerificationToken()
+    private async Task SendPasswordResetEmailAsync(User user, string resetToken)
+    {
+        var baseUrl = (_configuration["Frontend:BaseUrl"] ?? "").TrimEnd('/');
+        var link = $"{baseUrl}/auth/reset-password?token={Uri.EscapeDataString(resetToken)}";
+        var html = $"<p>We received a request to reset your Resonate password.</p>"
+            + $"<p><a href=\"{link}\">Reset my password</a></p>"
+            + $"<p>This link expires in 1 hour. If you didn't request this, you can ignore this email.</p>";
+
+        await _emailService.SendEmailAsync(user.Email, "Reset your Resonate password", html);
+    }
+
+    private string GenerateSecureToken()
     {
         var randomNumber = new byte[32];
         using var rng = RandomNumberGenerator.Create();
@@ -144,7 +197,7 @@ public class AuthServiceImpl : IAuthService
         return Convert.ToBase64String(randomNumber).TrimEnd('=').Replace('+', '-').Replace('/', '_');
     }
 
-    private static string HashEmailVerificationToken(string token)
+    private static string HashToken(string token)
     {
         return Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
     }
