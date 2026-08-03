@@ -3,8 +3,8 @@
     <h1>Blog Posts</h1>
     <div class="posts-header-actions">
       <a class="rss-link" [href]="feedUrl" target="_blank" rel="noopener" title="RSS feed">RSS</a>
-      <button class="btn btn-primary" (click)="createPost()">
-        <span>+ New Post</span>
+      <button class="btn btn-primary btn-icon" (click)="createPost()" title="New Post" aria-label="New Post">
+        <img src="assets/icon-post.png" alt="" />
       </button>
     </div>
   </div>

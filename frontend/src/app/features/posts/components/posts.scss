@@ -123,6 +123,22 @@
           background-color: var(--color-accent-hover);
         }
       }
+
+      &.btn-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px;
+
+        img {
+          width: 20px;
+          height: 20px;
+          display: block;
+          // Icon PNG is black-on-transparent; recolor to white to match the
+          // button's white text/accent styling.
+          filter: brightness(0) invert(1);
+        }
+      }
     }
   }
 
